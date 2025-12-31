@@ -14,9 +14,9 @@ urlpatterns = [
 
     # Site public (toutes les URLs de l’app shop)
     path('', include('shop.urls', namespace='shop')),
-    path('comptes', include('comptes.urls', namespace='comptes')),
-    path('orders', include('orders.urls', namespace='orders')),
-    path('staff', include('staff.urls', namespace='staff')),
+    path('comptes/', include('comptes.urls', namespace='comptes')),
+    path('orders/', include('orders.urls', namespace='orders')),
+    path('staff/', include('staff.urls', namespace='staff')),
     path("api/marketing/", include("marketing.urls")),
 
 ]
