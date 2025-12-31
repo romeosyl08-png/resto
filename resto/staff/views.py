@@ -62,7 +62,7 @@ def mark_order_delivered(request, order_id):
 
         apply_loyalty_on_delivery(order)
 
-    return redirect("admin_dashboard")
+    return redirect("staff:admin_dashboard")
 
 
 
