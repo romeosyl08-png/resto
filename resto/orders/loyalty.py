@@ -13,16 +13,14 @@ def apply_loyalty_on_delivery(order: Order):
         return  # commandes invité = pas de fidélité
 
     account, _ = LoyaltyAccount.objects.get_or_create(user=order.user)
-
-    meals_delivered = count_meals(order)
-    if meals_delivered <= 0:
-        return
-
-    account.points += meals_delivered
-
-    free_count = account.points // 8
-    account.points = account.points % 8
-    account.save(update_fields=["points"])
-
+    
+    meals_delivered = sum(i.quantity for i in order.items.all())
+    account.stamps += meals_delivered
+    
+    free_count = account.stamps // 8
+    account.stamps = account.stamps % 8
+    account.save(update_fields=["stamps"])
+    
     for _ in range(free_count):
-        FreeMealVoucher.objects.create(user=order.user)
+        FreeItemVoucher.objects.create(user=order.user)
+
