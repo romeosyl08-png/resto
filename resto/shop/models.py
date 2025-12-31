@@ -21,6 +21,8 @@ class Meal(models.Model):
     price = models.DecimalField(max_digits=8, decimal_places=2)
     is_active = models.BooleanField(default=True)
     image = models.ImageField(upload_to='meals/', blank=True, null=True)
+    
+    stock = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return self.name
