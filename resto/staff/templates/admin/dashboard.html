@@ -192,14 +192,6 @@
                     <span class="badge bg-secondary">Non</span>
                   {% endif %}
                 </td>
-                <td class="text-end">
-                  <a href="{% url 'staff:admin_meal_edit' meal.id %}" class="btn btn-sm btn-outline-primary">
-                    Modifier
-                  </a>
-                  <a href="{% url 'staff:admin_meal_delete' meal.id %}" class="btn btn-sm btn-outline-danger ms-2">
-                    Supprimer
-                  </a>
-                </td>
               </tr>
             {% empty %}
               <tr>
