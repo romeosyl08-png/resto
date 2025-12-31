@@ -1,13 +1,15 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from orders.cart import Cart
 from django.contrib.admin.views.decorators import staff_member_required
-from django.db.models import Sum, F
+from django.contrib.auth import get_user_model
+from django.db.models import Sum, F ,Count
 from django.utils import timezone
 from orders.models import Order, OrderItem
 from shop.models import Meal
 from django.views.decorators.http import require_POST
 
 from orders.loyalty import apply_loyalty_on_delivery  # import
+from marketing.models import LoyaltyAccount, FreeItemVoucher 
 # Create your views here.
 
 @staff_member_required
@@ -46,6 +48,39 @@ def admin_dashboard(request):
 
 
 
+@staff_member_required
+def admin_user_list(request):
+    User = get_user_model()
+    users = User.objects.order_by("-date_joined")[:200]
+    return render(request, "admin/user_list.html", {"users": users})
+
+
+@staff_member_required
+def admin_user_detail(request, user_id: int):
+    User = get_user_model()
+    u = get_object_or_404(User, id=user_id)
+
+    orders = Order.objects.filter(user=u).order_by("-created_at")[:50]
+    counts = (
+        Order.objects.filter(user=u)
+        .values("status")
+        .annotate(n=Count("id"))
+    )
+    counts_map = {x["status"]: x["n"] for x in counts}
+
+    total_spent = Order.objects.filter(user=u, status="delivered").aggregate(s=Sum("total"))["s"] or 0
+
+    loyalty, _ = LoyaltyAccount.objects.get_or_create(user=u)
+    vouchers_available = FreeItemVoucher.objects.filter(user=u, status="AVAILABLE").count()
+
+    return render(request, "admin/user_detail.html", {
+        "u": u,
+        "orders": orders,
+        "counts": counts_map,
+        "total_spent": total_spent,
+        "loyalty_points": getattr(loyalty, "stamps", 0),  # si ton champ s’appelle stamps
+        "free_vouchers": vouchers_available,
+    })
 
 
 
