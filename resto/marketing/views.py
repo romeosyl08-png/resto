@@ -51,7 +51,6 @@ class LoyaltyStatusView(APIView):
 
     def get(self, request):
         vouchers = FreeItemVoucher.objects.filter(user=request.user).order_by("-created_at")[:20]
-        vouchers_available = FreeItemVoucher.objects.filter(user=request.user,status="AVAILABLE").count()
         return Response({
             "vouchers": VoucherSerializer(vouchers, many=True).data
         })
