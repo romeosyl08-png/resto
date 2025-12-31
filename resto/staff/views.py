@@ -8,6 +8,9 @@ from orders.models import Order, OrderItem
 from shop.models import Meal
 from django.views.decorators.http import require_POST
 
+from django.contrib import messages
+from .forms import MealForm
+
 from orders.loyalty import apply_loyalty_on_delivery  # import
 from marketing.models import LoyaltyAccount, FreeItemVoucher 
 # Create your views here.
@@ -83,7 +86,47 @@ def admin_user_detail(request, user_id: int):
     })
 
 
+@staff_member_required
+def meal_list(request):
+    q = request.GET.get("q", "").strip()
+    qs = Meal.objects.select_related("category").order_by("category__name", "name")
+    if q:
+        qs = qs.filter(name__icontains=q)
+    return render(request, "admin/meals/meal_list.html", {"meals": qs, "q": q})
 
+@staff_member_required
+def meal_create(request):
+    if request.method == "POST":
+        form = MealForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Plat créé.")
+            return redirect("staff:meal_list")
+    else:
+        form = MealForm()
+    return render(request, "admin/meals/meal_form.html", {"form": form, "mode": "create"})
+
+@staff_member_required
+def meal_update(request, meal_id: int):
+    meal = get_object_or_404(Meal, id=meal_id)
+    if request.method == "POST":
+        form = MealForm(request.POST, request.FILES, instance=meal)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Plat modifié.")
+            return redirect("staff:meal_list")
+    else:
+        form = MealForm(instance=meal)
+    return render(request, "admin/meals/meal_form.html", {"form": form, "meal": meal, "mode": "edit"})
+
+@staff_member_required
+def meal_delete(request, meal_id: int):
+    meal = get_object_or_404(Meal, id=meal_id)
+    if request.method == "POST":
+        meal.delete()
+        messages.success(request, "Plat supprimé.")
+        return redirect("staff:meal_list")
+    return render(request, "admin/meals/meal_confirm_delete.html", {"meal": meal})
 
 @staff_member_required
 @require_POST
