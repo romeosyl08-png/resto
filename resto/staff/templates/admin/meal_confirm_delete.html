@@ -1,0 +1,15 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Supprimer plat{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-4">
+    <h1 class="h5 mb-3">Supprimer</h1>
+    <p>Confirmer la suppression de <strong>{{ meal.name }}</strong> ?</p>
+    <form method="post">
+      {% csrf_token %}
+      <button class="btn btn-danger" type="submit">Oui, supprimer</button>
+      <a class="btn btn-outline-secondary" href="{% url 'staff:admin_meal_list' %}">Annuler</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

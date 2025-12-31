@@ -1,0 +1,18 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{% if mode == "add" %}Ajouter plat{% else %}Modifier plat{% endif %}{% endblock %}
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-4">
+    <h1 class="h5 mb-3">{% if mode == "add" %}Ajouter un plat{% else %}Modifier {{ meal.name }}{% endif %}</h1>
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Enregistrer</button>
+        <a class="btn btn-outline-secondary" href="{% url 'staff:admin_meal_list' %}">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
