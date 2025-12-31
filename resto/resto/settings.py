@@ -84,7 +84,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'resto.wsgi.application'
 
 
-# Database
+# -------------------------------------------------------------------
+# DATABASE
+# -------------------------------------------------------------------
+IS_PRODUCTION = os.environ.get("RENDER") is not None
 if IS_PRODUCTION:
     # Render → Postgres via DATABASE_URL
     DATABASES = {
