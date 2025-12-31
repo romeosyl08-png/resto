@@ -1,170 +1,266 @@
-:root { --radius: 18px; }
+/* =========================================================
+   Resto UI — Mobile first “Instagram / Uber Eats” style
+   Drop-in replacement (paste as your main stylesheet)
+   ========================================================= */
+
+/* ---------- Tokens ---------- */
+:root{
+  --radius: 18px;
+
+  --bg: #0b0e13;
+  --surface: rgba(255,255,255,.06);
+  --surface-2: rgba(255,255,255,.09);
+  --border: rgba(255,255,255,.10);
+
+  --text: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.68);
+
+  --shadow: 0 18px 45px rgba(0,0,0,.45);
+
+  --brand: #ff4d2d;      /* CTA */
+  --brand-2: #ffb84d;    /* hover highlight */
+}
+
+/* ---------- Base ---------- */
+html{
+  /* important: mobile readability */
+  font-size: 17px;
+  -webkit-text-size-adjust: 100%;
+}
 
 body{
+  margin: 0;
+  color: var(--text);
   background:
-    radial-gradient(1200px 600px at 20% 0%, rgba(255, 184, 77, .18), transparent 60%),
-    radial-gradient(900px 500px at 90% 10%, rgba(255, 99, 71, .14), transparent 55%),
-    linear-gradient(180deg, #fff7ed 0%, #f6f7f9 60%, #f3f4f6 100%);
+    radial-gradient(1200px 600px at 20% 0%, rgba(255,184,77,.12), transparent 60%),
+    radial-gradient(900px 500px at 90% 10%, rgba(255,77,45,.10), transparent 55%),
+    linear-gradient(180deg, #0b0e13 0%, #0b0e13 55%, #0f131b 100%);
 }
 
+a{ color: inherit; }
+a:hover{ color: inherit; }
 
-
-.navbar-brand { font-weight: 800; letter-spacing: .2px; }
-
-.meal-img {
-  aspect-ratio: 16/9;
-  object-fit: cover;
+.container{
+  /* tighter like mobile apps */
+  padding-left: 14px;
+  padding-right: 14px;
 }
 
-.meal-img-lg {
-  width: 100%;
-  aspect-ratio: 16/9;
-  object-fit: cover;
+/* ---------- Typography (Uber Eats-ish) ---------- */
+h1,h2,h3,h4,h5{
+  letter-spacing: -.2px;
+  margin-bottom: .6rem;
 }
+h1{ font-size: 1.55rem; line-height: 1.15; }
+h2{ font-size: 1.25rem; line-height: 1.2; }
+h3{ font-size: 1.10rem; line-height: 1.25; }
 
-.card {
+.small, small{ font-size: .95rem; }
+.text-muted{ color: var(--muted) !important; }
+
+/* ---------- Surfaces / Cards ---------- */
+.card{
   border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
-.card-img-top {
+.card-body{ padding: 14px; }
+
+.card-img-top{
   border-top-left-radius: var(--radius);
   border-top-right-radius: var(--radius);
 }
 
-
-
-
-/* zone principale flottante */
-.main-content {
-  min-height: 100vh;
+/* ---------- Images ---------- */
+.meal-img,
+.meal-img-lg{
+  width: 100%;
+  aspect-ratio: 16/10;
+  object-fit: cover;
+  border-radius: 16px;
 }
 
-
-.hero-food{
-  background: transparent;
-  color: inherit;
-}
-
-
-
-.hero-food h1,
-
-
-
-
-.page-surface{
-  background:
-    linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.25)),
-    url("https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1600&q=80");
-
-  background-size: cover;
-  background-position: center;
-  color: white;
-
-  border-radius: 22px;
-  box-shadow: 0 25px 60px rgba(0,0,0,.55);
-}
-
-
-
-
-.btn-primary{
-  background-color:#ff4d2d;
-  border-color:#ff4d2d;
-}
-.btn-primary:hover{
-  filter: brightness(.95);
+/* ---------- Buttons (app-like) ---------- */
+.btn{
+  border-radius: 14px;
+  font-weight: 700;
+  letter-spacing: .1px;
 }
 
 .btn-dark{
-  background-color:#111827;
-  border-color:#111827;
+  background: #111827;
+  border-color: #111827;
 }
 
-.badge.text-bg-primary{
-  background-color:#ff4d2d !important;
+.btn-primary{
+  background: var(--brand);
+  border-color: var(--brand);
+}
+.btn-primary:hover{ filter: brightness(.95); }
+
+.btn-outline-secondary{
+  color: var(--text);
+  border-color: rgba(255,255,255,.18);
+}
+.btn-outline-secondary:hover{
+  background: rgba(255,255,255,.10);
+  border-color: rgba(255,255,255,.22);
+  color: var(--text);
 }
 
+/* Pill buttons (categories) */
+.btn.btn-sm{
+  padding: .45rem .75rem;
+  font-size: .95rem;
+  border-radius: 999px;
+}
 
-/* === NAVBAR FOOD === */
+/* ---------- Badges ---------- */
+.badge{
+  border-radius: 999px;
+  font-weight: 700;
+}
+.badge.text-bg-primary,
+.bg-danger{
+  background-color: var(--brand) !important;
+}
+
+/* ---------- Navbar (sticky like apps) ---------- */
+.navbar{
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
 .navbar-food{
   background:
-    linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)),
+    linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.55)),
     url("https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1600&q=80");
   background-size: cover;
   background-position: center;
-  backdrop-filter: blur(4px);
-  border-bottom: 1px solid rgba(255,255,255,.08);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,.10);
 }
 
-/* Texte navbar */
+.navbar-brand{
+  font-weight: 900;
+  letter-spacing: .2px;
+}
+
 .navbar-food .navbar-brand,
 .navbar-food .nav-link{
   color: #fff !important;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .navbar-food .nav-link:hover{
-  color: #ffb84d !important;
+  color: var(--brand-2) !important;
 }
 
+/* ---------- Main content spacing (make header visible without scrolling) ---------- */
+.main-content{
+  min-height: 100vh;
+  padding-top: 10px !important;
+  padding-bottom: 14px !important;
+}
 
-/* === MOBILE (smartphone) === */
-@media (max-width: 576px){
+/* ---------- “Page surface” (hero background card) ---------- */
+.page-surface{
+  background:
+    linear-gradient(rgba(0,0,0,.40), rgba(0,0,0,.40)),
+    url("https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1600&q=80");
+  background-size: cover;
+  background-position: center;
+  color: white;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 25px 60px rgba(0,0,0,.55);
+}
 
-  /* garder un noir propre, éviter les effets lourds */
+/* ---------- Hero (compact, visible immediately) ---------- */
+.hero-food{
+  background: transparent;
+  color: inherit;
+  border-radius: 18px !important;
+}
+
+.hero-food .card-body{
+  padding: 16px !important;
+}
+
+.hero-food h1{
+  font-size: 1.55rem !important;
+  line-height: 1.12 !important;
+}
+
+.hero-food p{
+  font-size: 1.00rem !important;
+  color: rgba(255,255,255,.88);
+  margin-bottom: .75rem;
+}
+
+/* ---------- Inputs (Instagram-ish) ---------- */
+.form-control, .form-select{
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+}
+.form-control::placeholder{ color: rgba(255,255,255,.55); }
+.form-control:focus, .form-select:focus{
+  border-color: rgba(255,184,77,.55);
+  box-shadow: 0 0 0 .2rem rgba(255,184,77,.12);
+  background: rgba(255,255,255,.07);
+  color: var(--text);
+}
+
+/* ---------- Tables (for staff / profile) ---------- */
+.table{
+  color: var(--text);
+}
+.table thead.table-light{
+  --bs-table-bg: rgba(255,255,255,.06);
+  --bs-table-color: var(--text);
+}
+.table td, .table th{
+  border-color: rgba(255,255,255,.10);
+}
+
+/* ---------- Cart / summary cards look tighter ---------- */
+hr{ border-color: rgba(255,255,255,.12); }
+
+/* ---------- Desktop: keep your original “bright” vibe if you want ---------- */
+@media (min-width: 992px){
+  html{ font-size: 16px; }
+
   body{
-    background: #0b0e13;
+    color: #111827;
+    background:
+      radial-gradient(1200px 600px at 20% 0%, rgba(255,184,77,.18), transparent 60%),
+      radial-gradient(900px 500px at 90% 10%, rgba(255,99,71,.14), transparent 55%),
+      linear-gradient(180deg, #fff7ed 0%, #f6f7f9 60%, #f3f4f6 100%);
   }
 
-  /* espace noir autour + carte plus compacte */
-  .main-content{
-    padding-top: 18px !important;
-    padding-bottom: 18px !important;
+  .card{
+    background: #fff;
+    border: 0;
+    box-shadow: 0 10px 30px rgba(17,24,39,.10);
   }
 
+  .text-muted{ color: rgba(17,24,39,.60) !important; }
 
-  .navbar-food{
-    background-position: center top;
+  .form-control, .form-select{
+    background: #fff;
+    color: #111827;
+    border: 1px solid rgba(17,24,39,.14);
   }
 
-  .page-surface{
-    border-radius: 18px;
-  }
+  .navbar-food .nav-link:hover{ color: #ffb84d !important; }
+}
 
-
-  /* Hero: moins haut, texte plus petit, boutons full width */
-  .hero-food{
-    border-radius: 16px !important;
-  }
-
-  .hero-food .card-body{
-    padding: 16px !important;
-  }
-
-  .hero-food h1{
-    font-size: 1.35rem !important;
-    line-height: 1.2 !important;
-  }
-
-  .hero-food p{
-    font-size: .95rem !important;
-    opacity: .95;
-  }
-
-  /* Cards plats: images un peu plus petites */
-  .meal-img{
-    aspect-ratio: 16/10; /* un peu plus “compact” mobile */
-  }
-
-  /* boutons: plus faciles au doigt */
-  .btn, .btn-lg{
-    border-radius: 14px;
-  }
-
-  /* catégories: pills plus compactes */
-  .btn.btn-sm{
-    padding: .35rem .6rem;
-    font-size: .85rem;
-  }
+/* ---------- Reduce motion ---------- */
+@media (prefers-reduced-motion: reduce){
+  *{ scroll-behavior: auto !important; }
 }
