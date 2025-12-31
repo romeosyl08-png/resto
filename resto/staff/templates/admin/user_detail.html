@@ -1,55 +1,91 @@
 {% extends "admin/base_admin.html" %}
-{% block title %}User {{ u.username }}{% endblock %}
-{% block content %}
+{% block title %}Utilisateur{% endblock %}
 
-<div class="row g-4">
-  <div class="col-lg-5">
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h1 class="h5 mb-1">{{ u.username }}</h1>
+    <div class="text-muted small">{{ u.email|default:"-" }}</div>
+  </div>
+  <a class="btn btn-sm btn-outline-secondary" href="{% url 'staff:admin_user_list' %}">
+    Retour
+  </a>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-4">
     <div class="card border-0 shadow-sm">
       <div class="card-body">
-        <h1 class="h5 mb-3">Profil utilisateur</h1>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Inscription</span>
+          <span class="fw-semibold">{{ u.date_joined|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Staff</span>
+          <span class="fw-semibold">{% if u.is_staff %}Oui{% else %}Non{% endif %}</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Total dépensé (livré)</span>
+          <span class="fw-semibold">{{ total_spent }} FCFA</span>
+        </div>
 
-        <div class="mb-2"><span class="text-muted">Username:</span> <strong>{{ u.username }}</strong></div>
-        <div class="mb-2"><span class="text-muted">Email:</span> {{ u.email|default:"-" }}</div>
+        <hr>
 
-        {% if profile %}
-          <hr>
-          <div class="mb-2"><span class="text-muted">Nom:</span> {{ profile.full_name|default:"-" }}</div>
-          <div class="mb-2"><span class="text-muted">Téléphone:</span> {{ profile.phone|default:"-" }}</div>
-          <div class="mb-2"><span class="text-muted">Adresse:</span> {{ profile.address|default:"-" }}</div>
-        {% endif %}
+        <h2 class="h6 mb-2">Fidélité</h2>
+        <div class="d-flex justify-content-between mb-1">
+          <span class="text-muted">Progression</span>
+          <span class="fw-semibold">{{ loyalty_points }}/8</span>
+        </div>
+        <div class="d-flex justify-content-between">
+          <span class="text-muted">Bons gratuits</span>
+          <span class="fw-semibold">{{ free_vouchers }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mt-3">
+      <div class="card-body">
+        <h2 class="h6 mb-2">Commandes par statut</h2>
+        <div class="small text-muted">En attente: {{ counts.pending|default:0 }}</div>
+        <div class="small text-muted">Confirmées: {{ counts.confirmed|default:0 }}</div>
+        <div class="small text-muted">Livrées: {{ counts.delivered|default:0 }}</div>
+        <div class="small text-muted">Annulées: {{ counts.canceled|default:0 }}</div>
       </div>
     </div>
   </div>
 
-  <div class="col-lg-7">
+  <div class="col-lg-8">
     <div class="card border-0 shadow-sm">
-      <div class="card-header bg-white border-0">
-        <h2 class="h6 mb-0">Dernières commandes</h2>
-      </div>
-      <div class="table-responsive">
-        <table class="table table-sm align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>ID</th><th>Date</th><th>Total</th><th>Statut</th><th>Adresse</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for o in orders %}
+      <div class="card-body">
+        <h2 class="h6 mb-3">Dernières commandes</h2>
+
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0">
+            <thead class="table-light">
               <tr>
-                <td>{{ o.id }}</td>
-                <td>{{ o.created_at }}</td>
-                <td>{{ o.total }} FCFA</td>
-                <td>{{ o.get_status_display }}</td>
-                <td class="text-truncate" style="max-width:240px;">{{ o.address|default:"-" }}</td>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Total</th>
+                <th>Statut</th>
               </tr>
-            {% empty %}
-              <tr><td colspan="5" class="text-center text-muted py-3">Aucune commande</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {% for o in orders %}
+                <tr>
+                  <td>#{{ o.id }}</td>
+                  <td>{{ o.created_at|date:"d/m/Y H:i" }}</td>
+                  <td>{{ o.total }} FCFA</td>
+                  <td>{{ o.get_status_display }}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="4" class="text-center text-muted py-3">Aucune commande.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
       </div>
     </div>
   </div>
 </div>
-
 {% endblock %}
