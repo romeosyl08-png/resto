@@ -31,7 +31,7 @@ from django.utils import timezone
 from django.shortcuts import render
 from .models import Meal, Category
 
-CUTOFF_TIME = time(14, 35)  # 08:30
+CUTOFF_TIME = time(9, 30)  # 08:30
 
 def meal_llist(request, category_slug=None):
     now = timezone.localtime()
