@@ -43,6 +43,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Media storage
+    'cloudinary',
+    'cloudinary_storage',
+    
     'comptes',
     'shop', 
     "orders",
@@ -114,12 +119,21 @@ MEDIA_URL = '/media/'
 
 if IS_PRODUCTION:
     # En prod → toutes les images via Cloudinary
-    DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-    CLOUDINARY_STORAGE = {
-        "CLOUD_NAME": os.environ.get("CLOUDINARY_CLOUD_NAME"),
-        "API_KEY": os.environ.get("CLOUDINARY_API_KEY"),
-        "API_SECRET": os.environ.get("CLOUDINARY_API_SECRET"),
-    }
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+        }
+        
+        CLOUDINARY_STORAGE = {
+            "CLOUD_NAME": os.environ.get("CLOUDINARY_CLOUD_NAME"),
+            "API_KEY": os.environ.get("CLOUDINARY_API_KEY"),
+            "API_SECRET": os.environ.get("CLOUDINARY_API_SECRET"),
+        }
+
 else:
     # En local → fichiers sur disque
     MEDIA_ROOT = BASE_DIR / "media"
