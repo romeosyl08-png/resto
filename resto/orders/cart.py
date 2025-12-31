@@ -14,40 +14,55 @@ CART_SESSION_ID = "cart"
 
 
 class Cart:
-    MAX_QTY = 20  # plafond global (ajuste si besoin)
+    MAX_QTY = 20
 
     def __init__(self, request):
         self.session = request.session
-        cart = self.session.get(CART_SESSION_ID)
+        cart = self.session.get("cart")
         if not cart:
-            cart = self.session[CART_SESSION_ID] = {}
+            cart = self.session["cart"] = {}
         self.cart = cart
 
     def add(self, meal_id, quantity=1):
-        """Incrémente la quantité (min 1, max MAX_QTY)."""
         meal_id = str(meal_id)
+        meal = Meal.objects.get(id=int(meal_id))
 
         if meal_id not in self.cart:
             self.cart[meal_id] = {"quantity": 0}
 
-        new_qty = self.cart[meal_id]["quantity"] + int(quantity)
-        self.cart[meal_id]["quantity"] = max(1, min(self.MAX_QTY, new_qty))
+        current = int(self.cart[meal_id]["quantity"])
+        wanted = current + int(quantity)
+
+        # limites
+        limit_stock = int(meal.stock)
+        limit_per_order = int(meal.max_per_order or self.MAX_QTY)
+        hard_limit = min(self.MAX_QTY, limit_per_order, limit_stock)
+
+        self.cart[meal_id]["quantity"] = max(1, min(wanted, hard_limit))
         self.save()
 
     def set(self, meal_id, quantity):
-        """Fixe la quantité (0 => suppression)."""
         meal_id = str(meal_id)
         qty = int(quantity)
 
         if qty <= 0:
             if meal_id in self.cart:
                 del self.cart[meal_id]
-        else:
-            if meal_id not in self.cart:
-                self.cart[meal_id] = {"quantity": 0}
-            self.cart[meal_id]["quantity"] = max(1, min(self.MAX_QTY, qty))
+            self.save()
+            return
 
+        meal = Meal.objects.get(id=int(meal_id))
+        limit_stock = int(meal.stock)
+        limit_per_order = int(meal.max_per_order or self.MAX_QTY)
+        hard_limit = min(self.MAX_QTY, limit_per_order, limit_stock)
+
+        if meal_id not in self.cart:
+            self.cart[meal_id] = {"quantity": 0}
+        self.cart[meal_id]["quantity"] = max(1, min(qty, hard_limit))
         self.save()
+
+    def save(self):
+        self.session.modified = True
 
     def remove(self, meal_id):
         meal_id = str(meal_id)
@@ -58,9 +73,6 @@ class Cart:
     def clear(self):
         self.session[CART_SESSION_ID] = {}
         self.save()
-
-    def save(self):
-        self.session.modified = True
 
     def __iter__(self):
         meal_ids = self.cart.keys()
