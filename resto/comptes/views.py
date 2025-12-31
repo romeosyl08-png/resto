@@ -7,7 +7,7 @@ from django.contrib.auth import login as auth_login
 from .models import  UserProfile
 from django.shortcuts import render
 from django.db.models import Count
-from marketing.models import LoyaltyAccount, FreeMealVoucher  # adapte si noms diffèrent
+from marketing.models import LoyaltyAccount, FreeItemVoucher
 
 def signup(request):
     next_url = request.GET.get('next') or request.POST.get('next') or '/'
