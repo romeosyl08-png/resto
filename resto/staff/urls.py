@@ -5,9 +5,9 @@ app_name = 'staff'
 
 urlpatterns = [
         # Dashboard + action pour marquer livré
-    path('staff/dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path(
-        'staff/order/<int:order_id>/delivered/',
+        'order/<int:order_id>/delivered/',
         views.mark_order_delivered,
         name='mark_order_delivered',
     ),
