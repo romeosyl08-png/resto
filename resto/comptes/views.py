@@ -38,7 +38,8 @@ def profile(request):
 
     # --- Fidélité ---
     loyalty, _ = LoyaltyAccount.objects.get_or_create(user=request.user)
-    vouchers_available = FreeMealVoucher.objects.filter(user=request.user, is_used=False).count()
+    
+    vouchers_available = FreeItemVoucher.objects.filter(user=request.user,status="AVAILABLE").count()
 
     # --- Filtre statut commandes ---
     status = request.GET.get("status", "all")
