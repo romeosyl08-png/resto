@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Menu – Resto Cuistot{% endblock %}
+
+{% block content %}
+<section class="container py-4">
+<div class="container mb-4">
+  <div class="hero-food card border-0 shadow-sm overflow-hidden">
+    <div class="card-body p-4 p-md-5">
+      <div class="row align-items-center gy-3">
+        <div class="col-lg-8">
+          <h1 class="display-6 fw-bold mb-2">
+            Commande en ligne, livraison rapide
+          </h1>
+          <p class="lead mb-0">
+            Des plats chauds, faits maison. Tu choisis, on s’occupe du reste.
+          </p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+          <a href="#plats" class="btn btn-light btn-lg fw-semibold w-100 w-lg-auto">Voir le menu</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<div class="mb-3">
+  <span class="fw-bold me-2">Catégories :</span>
+  <div class="d-flex gap-2 overflow-auto pb-2 mb-3">
+  <a class="btn btn-sm {% if not category %}btn-primary{% else %}btn-outline-primary{% endif %}"
+     href="{% url 'shop:meal_list' %}">
+    Tout
+  </a>
+
+  {% for c in categories %}
+    <a class="btn btn-sm {% if category and category.slug == c.slug %}btn-primary{% else %}btn-outline-primary{% endif %}"
+       href="{% url 'shop:meal_list_by_category' c.slug %}">
+      {{ c.name }}
+    </a>
+  {% endfor %}
+</div>
+
+
+<div class="row g-3">
+  <h2 id="plats" class="h4 mb-3">Plats</h2>
+  <div class="row g-3">
+
+  {% for meal in meals %}
+<div class="col-12 col-sm-6 col-lg-4">
+  <div class="card h-100 border-0 shadow-sm meal-card">
+
+    {% if meal.image %}
+      <img src="{{ meal.image.url }}" class="card-img-top meal-img" alt="{{ meal.name }}">
+    {% else %}
+      <img src="https://via.placeholder.com/800x450?text=Resto" class="card-img-top meal-img" alt="{{ meal.name }}">
+    {% endif %}
+
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start gap-2">
+        <h3 class="h6 fw-semibold mb-1">
+          <a class="text-decoration-none text-dark"
+             href="{% url 'shop:meal_detail' meal.slug %}">
+            {{ meal.name }}
+          </a>
+        </h3>
+        <span class="badge text-bg-light border">{{ meal.price }} FCFA</span>
+      </div>
+
+      {% if meal.description %}
+        <p class="text-muted small meal-desc mb-3">{{ meal.description }}</p>
+      {% else %}
+        <p class="text-muted small mb-3">Plat du jour.</p>
+      {% endif %}
+
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary w-50"
+          href="{% url 'shop:meal_detail' meal.slug %}">
+          Détails
+        </a>
+
+       <form method="post" action="{% url 'orders:cart_add' meal.id %}" class="d-flex gap-2 align-items-center">
+          {% csrf_token %}
+          <div class="d-flex align-items-center gap-2">
+  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="decQty(this)">−</button>
+
+  <input type="hidden" name="quantity" value="1">
+  <span class="fw-semibold">1</span>
+
+  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="incQty(this)">+</button>
+</div>
+
+          <button type="submit" class="btn btn-sm btn-dark">
+            Ajouter
+          </button>
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+  {% empty %}
+    <p>Aucun plat disponible pour le moment.</p>
+  {% endfor %}
+</div>  <!-- row -->
+</section>
+
+{% endblock %}

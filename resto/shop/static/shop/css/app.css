@@ -1,0 +1,170 @@
+:root { --radius: 18px; }
+
+body{
+  background:
+    radial-gradient(1200px 600px at 20% 0%, rgba(255, 184, 77, .18), transparent 60%),
+    radial-gradient(900px 500px at 90% 10%, rgba(255, 99, 71, .14), transparent 55%),
+    linear-gradient(180deg, #fff7ed 0%, #f6f7f9 60%, #f3f4f6 100%);
+}
+
+
+
+.navbar-brand { font-weight: 800; letter-spacing: .2px; }
+
+.meal-img {
+  aspect-ratio: 16/9;
+  object-fit: cover;
+}
+
+.meal-img-lg {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+}
+
+.card {
+  border-radius: var(--radius);
+}
+
+.card-img-top {
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+}
+
+
+
+
+/* zone principale flottante */
+.main-content {
+  min-height: 100vh;
+}
+
+
+.hero-food{
+  background: transparent;
+  color: inherit;
+}
+
+
+
+.hero-food h1,
+
+
+
+
+.page-surface{
+  background:
+    linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.25)),
+    url("https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1600&q=80");
+
+  background-size: cover;
+  background-position: center;
+  color: white;
+
+  border-radius: 22px;
+  box-shadow: 0 25px 60px rgba(0,0,0,.55);
+}
+
+
+
+
+.btn-primary{
+  background-color:#ff4d2d;
+  border-color:#ff4d2d;
+}
+.btn-primary:hover{
+  filter: brightness(.95);
+}
+
+.btn-dark{
+  background-color:#111827;
+  border-color:#111827;
+}
+
+.badge.text-bg-primary{
+  background-color:#ff4d2d !important;
+}
+
+
+/* === NAVBAR FOOD === */
+.navbar-food{
+  background:
+    linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)),
+    url("https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1600&q=80");
+  background-size: cover;
+  background-position: center;
+  backdrop-filter: blur(4px);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+/* Texte navbar */
+.navbar-food .navbar-brand,
+.navbar-food .nav-link{
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.navbar-food .nav-link:hover{
+  color: #ffb84d !important;
+}
+
+
+/* === MOBILE (smartphone) === */
+@media (max-width: 576px){
+
+  /* garder un noir propre, éviter les effets lourds */
+  body{
+    background: #0b0e13;
+  }
+
+  /* espace noir autour + carte plus compacte */
+  .main-content{
+    padding-top: 18px !important;
+    padding-bottom: 18px !important;
+  }
+
+
+  .navbar-food{
+    background-position: center top;
+  }
+
+  .page-surface{
+    border-radius: 18px;
+  }
+
+
+  /* Hero: moins haut, texte plus petit, boutons full width */
+  .hero-food{
+    border-radius: 16px !important;
+  }
+
+  .hero-food .card-body{
+    padding: 16px !important;
+  }
+
+  .hero-food h1{
+    font-size: 1.35rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .hero-food p{
+    font-size: .95rem !important;
+    opacity: .95;
+  }
+
+  /* Cards plats: images un peu plus petites */
+  .meal-img{
+    aspect-ratio: 16/10; /* un peu plus “compact” mobile */
+  }
+
+  /* boutons: plus faciles au doigt */
+  .btn, .btn-lg{
+    border-radius: 14px;
+  }
+
+  /* catégories: pills plus compactes */
+  .btn.btn-sm{
+    padding: .35rem .6rem;
+    font-size: .85rem;
+  }
+}
