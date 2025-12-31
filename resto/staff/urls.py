@@ -11,4 +11,6 @@ urlpatterns = [
         views.mark_order_delivered,
         name='mark_order_delivered',
     ),
+        path("users/", views.admin_user_list, name="admin_user_list"),
+
 ]
