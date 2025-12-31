@@ -61,6 +61,6 @@ def profile(request):
         "status": status,
         "counts": counts_map,
 
-        "loyalty_points": loyalty.points,         # points restants (0..7)
+        "loyalty_points": loyalty.stamps, # points restants (0..7)
         "free_vouchers": vouchers_available,      # bons gratuits dispo
     })
