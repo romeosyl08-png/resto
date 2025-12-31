@@ -100,7 +100,7 @@
                   <td>{{ order.total }} FCFA</td>
                   <td>{{ order.get_status_display }}</td>
                     {% if order.status != 'delivered' %}
-                      <form method="post" action="{% url 'orders:mark_order_delivered' order.id %}">
+                      <form method="post" action="{% url 'staff:mark_order_delivered' order.id %}">
                         {% csrf_token %}
                         <button class="btn btn-sm btn-success" type="submit">
                           Livrer
