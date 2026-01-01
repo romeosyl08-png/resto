@@ -120,20 +120,3 @@ def checkout(request):
 
 
 
-
-@transaction.atomic
-def apply_loyalty_on_delivery(order):
-    if not order.user:
-        return  # invité = pas de fidélité
-
-    account, _ = LoyaltyAccount.objects.get_or_create(user=order.user)
-
-    meals = count_meals(order)
-    account.points += meals
-
-    free_count = account.points // 8
-    account.points = account.points % 8
-    account.save()
-
-    for _ in range(free_count):
-        FreeMealVoucher.objects.create(user=order.user)
