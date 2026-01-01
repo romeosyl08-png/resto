@@ -3,20 +3,33 @@ from .models import Meal, Category
 from django.shortcuts import render
 
 
-def meal_list(request, category_slug=None):
-    category = None
-    categories = Category.objects.all()
-    meals = Meal.objects.filter(is_active=True)
+# shop/models.py
+from django.db import models
+from django.utils.translation import gettext_lazy as _
 
-    if category_slug:
-        category = get_object_or_404(Category, slug=category_slug)
-        meals = meals.filter(category=category)
+WEEKDAY_CHOICES = [
+    (0, "Lundi"),
+    (1, "Mardi"),
+    (2, "Mercredi"),
+    (3, "Jeudi"),
+    (4, "Vendredi"),
+    (5, "Samedi"),
+    (6, "Dimanche"),
+]
 
-    return render(request, 'shop/meal_list.html', {
-        'category': category,
-        'categories': categories,
-        'meals': meals,
-    })
+class Meal(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='meals')
+    name = models.CharField(max_length=150)
+    slug = models.SlugField(unique=True)
+    description = models.TextField(blank=True)
+    price = models.DecimalField(max_digits=8, decimal_places=2)
+    is_active = models.BooleanField(default=True)
+    image = models.ImageField(upload_to='meals/', blank=True, null=True)
+
+    stock = models.PositiveIntegerField(default=0)
+
+    available_weekdays = models.JSONField(default=list, blank=True)  # ex: [0,2,4]
+
 
 
 def meal_detail(request, slug):
@@ -26,30 +39,6 @@ def meal_detail(request, slug):
 
 
 
-from datetime import time
-from django.utils import timezone
-from django.shortcuts import render
-from .models import Meal, Category
-
-CUTOFF_TIME = time(9, 30)  # 08:30
-
-def meal_llist(request, category_slug=None):
-    now = timezone.localtime()
-    sold_out = now.time() >= CUTOFF_TIME
-
-    # 1) Plat du jour (simple)
-    meal_of_day = Meal.objects.filter(is_active=True).order_by("-id").first()
-
-    # si tu veux garder les catégories pour plus tard (optionnel)
-    categories = Category.objects.all()
-
-    return render(request, "shop/meal_of_day.html", {
-        "meal": meal_of_day,
-        "categories": categories,
-        "sold_out": sold_out,
-        "cutoff_time": CUTOFF_TIME,
-        "now": now,
-    })
 
 
 
