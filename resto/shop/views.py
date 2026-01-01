@@ -33,12 +33,24 @@ def meal_list(request, category_slug=None):
     service_weekday = service_day.weekday()  # 0=Mon ... 6=Sun
 
     # plats actifs (tu peux filtrer category_slug si tu veux)
+    # shop/views.py
     qs = Meal.objects.filter(is_active=True)
-    if category_slug:
-        qs = qs.filter(category__slug=category_slug)
+    
+    # si le champ n'existe pas en DB (prod pas migrée), on ignore le filtre jours
+    try:
+        qs = qs.values("id")  # force une requête simple
+        Meal._meta.get_field("available_weekdays")
+        has_weekdays = True
+    except Exception:
+        has_weekdays = False
+    
+    if has_weekdays:
+        meals_today = [m for m in Meal.objects.filter(is_active=True).order_by("-id")
+                       if service_weekday in (getattr(m, "available_weekdays", []) or [])]
+    else:
+        meals_today = list(Meal.objects.filter(is_active=True).order_by("-id"))
 
-    # Filtrage "jours dispo" (robuste même si SQLite capricieux)
-    meals_today = [m for m in qs.order_by("-id") if service_weekday in (m.available_weekdays or [])]
+
 
     meal_of_day = meals_today[0] if meals_today else None
     categories = Category.objects.all()
