@@ -13,6 +13,18 @@ class Category(models.Model):
         return self.name
 
 
+from django.utils.translation import gettext_lazy as _
+
+WEEKDAY_CHOICES = [
+    (0, "Lundi"),
+    (1, "Mardi"),
+    (2, "Mercredi"),
+    (3, "Jeudi"),
+    (4, "Vendredi"),
+    (5, "Samedi"),
+    (6, "Dimanche"),
+]
+
 class Meal(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='meals')
     name = models.CharField(max_length=150)
@@ -21,11 +33,11 @@ class Meal(models.Model):
     price = models.DecimalField(max_digits=8, decimal_places=2)
     is_active = models.BooleanField(default=True)
     image = models.ImageField(upload_to='meals/', blank=True, null=True)
-    
+
     stock = models.PositiveIntegerField(default=0)
 
-    def __str__(self):
-        return self.name
+    available_weekdays = models.JSONField(default=list, blank=True)  # ex: [0,2,4]
+
 
 
 
