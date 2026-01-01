@@ -35,7 +35,7 @@ class Meal(models.Model):
     image = models.ImageField(upload_to='meals/', blank=True, null=True)
 
     stock = models.PositiveIntegerField(default=0)
-
+    max_per_order = models.PositiveIntegerField(default=10) 
     available_weekdays = models.JSONField(default=list, blank=True)  # ex: [0,2,4]
 
 
