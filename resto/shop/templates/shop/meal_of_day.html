@@ -2,114 +2,198 @@
 {% block title %}Plat du jour – Resto Cuistot{% endblock %}
 
 {% block content %}
-<section class="container py-4">
+<section class="container py-3 py-md-4">
 
   {% if not meal %}
-    <div class="alert alert-warning">
+    <div class="alert alert-warning mb-0">
       Aucun plat du jour n’est disponible.
     </div>
   {% else %}
 
-  <!-- HERO + IMAGE -->
+  <!-- HERO -->
   <div class="page-surface p-3 p-md-4">
-    <div class="row g-4 align-items-stretch">
+    <div class="row g-3 g-md-4 align-items-stretch">
 
       <!-- Image -->
       <div class="col-lg-7">
-        <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="card border-0 shadow-sm overflow-hidden meal-hero-media">
           {% if meal.image %}
             <img src="{{ meal.image.url }}" class="meal-img-lg" alt="{{ meal.name }}">
           {% else %}
             <img src="https://via.placeholder.com/1200x675?text=Resto" class="meal-img-lg" alt="{{ meal.name }}">
+          {% endif %}
+
+          {% if sold_out %}
+            <div class="soldout-overlay">
+              <span class="soldout-pill">SOLD OUT</span>
+            </div>
           {% endif %}
         </div>
       </div>
 
       <!-- Infos + achat -->
       <div class="col-lg-5">
-        <div class="card border-0 shadow-sm h-100">
-          <div class="card-body p-4">
+        <div class="card border-0 shadow-sm h-100 meal-hero-info">
+          <div class="card-body p-3 p-md-4 d-flex flex-column">
 
+            <!-- Title + price -->
             <div class="d-flex justify-content-between align-items-start gap-2">
-              <h1 class="h4 fw-bold mb-1">{{ meal.name }}</h1>
+              <div class="flex-grow-1">
+                <h1 class="h4 fw-bold mb-1">{{ meal.name }}</h1>
+                <div class="small text-muted">
+                  {{ meal.category.name }}
+                  {% if order_window_open %}
+                    · Commandes ouvertes jusqu’à {{ cutoff_time|time:"H:i" }}
+                  {% else %}
+                    · Réouverture à {{ open_time|time:"H:i" }}
+                  {% endif %}
+                </div>
+              </div>
 
-              {% if sold_out %}
-                <span class="badge bg-danger fs-6">SOLD OUT</span>
-              {% else %}
+              {% if not sold_out %}
                 <span class="badge text-bg-primary fs-6">{{ meal.price }} FCFA</span>
+              {% else %}
+                <span class="badge bg-danger fs-6">Indispo</span>
               {% endif %}
             </div>
 
-            <div class="text-muted small mb-3">
-              {{ meal.category.name }} · Fermeture commandes à {{ cutoff_time|time:"H:i" }}
-            </div>
-
+            <!-- Description -->
             {% if meal.description %}
-              <p class="mb-4">{{ meal.description }}</p>
+              <p class="mt-3 mb-3 mb-md-4">{{ meal.description }}</p>
             {% else %}
-              <p class="mb-4 text-muted">Plat du jour. Pas besoin de poésie.</p>
+              <p class="mt-3 mb-3 mb-md-4 text-muted">Plat du jour. Pas besoin de poésie.</p>
             {% endif %}
 
+            <!-- Status hint -->
+            <div class="status-hint small mb-3">
+              {% if sold_out %}
+                {% if not order_window_open %}
+                  Commandes fermées. Reviens à {{ open_time|time:"H:i" }}.
+                {% elif meal.stock <= 0 %}
+                  Stock épuisé.
+                {% else %}
+                  Indisponible.
+                {% endif %}
+              {% else %}
+                Stock restant : <strong>{{ meal.stock }}</strong>
+              {% endif %}
+            </div>
+
             <!-- Achat -->
-            <form method="post" action="{% url 'orders:cart_add' meal.id %}">
+            <form method="post" action="{% url 'orders:cart_add' meal.id %}" class="mt-auto">
               {% csrf_token %}
 
-              <div class="d-flex align-items-center gap-2 mb-3">
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="decQty(this)" {% if sold_out %}disabled{% endif %}>−</button>
+              <div class="qty-row d-flex align-items-center justify-content-between gap-3 mb-3">
+                <div class="qty">
+                  <button type="button" class="btn btn-outline-secondary btn-sm qty-btn"
+                          onclick="decQty(this)" {% if sold_out %}disabled{% endif %} aria-label="Diminuer">
+                    −
+                  </button>
 
-                <input type="hidden" name="quantity" value="1">
-                <span class="fw-semibold">1</span>
+                  <input type="hidden" name="quantity" value="1">
+                  <span class="qty-val fw-bold">1</span>
 
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="incQty(this)" {% if sold_out %}disabled{% endif %}>+</button>
+                  <button type="button" class="btn btn-outline-secondary btn-sm qty-btn"
+                          onclick="incQty(this)" {% if sold_out %}disabled{% endif %} aria-label="Augmenter">
+                    +
+                  </button>
+                </div>
+
+                <div class="small text-muted text-end">
+                  Max 20 / commande
+                </div>
               </div>
 
-              <button type="submit" class="btn btn-dark btn-lg w-100" {% if sold_out %}disabled{% endif %}>
+              <button type="submit" class="btn btn-dark btn-lg w-100"
+                      {% if sold_out %}disabled{% endif %}>
                 {% if sold_out %}Indisponible{% else %}Ajouter au panier{% endif %}
               </button>
             </form>
 
-            <!-- Détails repliables (hybride du detail) -->
+            <!-- Détails (non repliable : visible direct, compact) -->
             <hr class="my-4">
-
-            <h2 class="h6 fw-bold mb-2">Détails</h2>
+            <h2 class="h6 fw-bold mb-2">Infos rapides</h2>
             <ul class="list-unstyled small mb-0">
-            <li><strong>Prix :</strong> {{ meal.price }} FCFA</li>
-            <li><strong>Catégorie :</strong> {{ meal.category.name }}</li>
-            <li><strong>Fermeture commandes :</strong> {{ cutoff_time|time:"H:i" }}</li>
+              <li><strong>Prix :</strong> {{ meal.price }} FCFA</li>
+              <li><strong>Catégorie :</strong> {{ meal.category.name }}</li>
+              <li><strong>Ouverture :</strong> {{ open_time|time:"H:i" }}</li>
+              <li><strong>Fermeture :</strong> {{ cutoff_time|time:"H:i" }}</li>
             </ul>
 
+          </div>
+        </div>
+      </div>
 
-          </div><!-- body -->
-        </div><!-- card -->
-      </div><!-- col -->
-    </div><!-- row -->
-  </div><!-- page-surface -->
+    </div>
+  </div>
+
+  <!-- Styles local page (évite de casser le reste) -->
+  <style>
+    .meal-hero-media{ position: relative; }
+    .soldout-overlay{
+      position:absolute; inset:0;
+      background: linear-gradient(rgba(0,0,0,.10), rgba(0,0,0,.55));
+      display:flex; align-items:center; justify-content:center;
+      backdrop-filter: blur(2px);
+    }
+    .soldout-pill{
+      background: rgba(0,0,0,.70);
+      color:#fff;
+      padding:.55rem 1rem;
+      border-radius:999px;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+    .status-hint{
+      background: rgba(0,0,0,.08);
+      border: 1px solid rgba(0,0,0,.08);
+      border-radius: 14px;
+      padding: .65rem .8rem;
+    }
+    .qty{
+      display:flex; align-items:center; gap:.6rem;
+      background: rgba(0,0,0,.06);
+      border: 1px solid rgba(0,0,0,.08);
+      border-radius: 999px;
+      padding: .35rem .5rem;
+    }
+    .qty-btn{ border-radius: 999px; min-width: 40px; }
+    .qty-val{ min-width: 18px; text-align:center; display:inline-block; }
+    @media (max-width: 576px){
+      .page-surface{ padding: 12px !important; }
+      .meal-img-lg{ aspect-ratio: 16/11; }
+      .status-hint{ background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.10); }
+    }
+  </style>
+
+  <script>
+    function incQty(btn){
+      const box = btn.closest('.qty');
+      const input = box.querySelector('input[name="quantity"]');
+      const span = box.querySelector('.qty-val');
+
+      let val = parseInt(input.value || "1", 10);
+      const max = 20;
+      if(val < max){
+        val++;
+        input.value = val;
+        span.textContent = val;
+      }
+    }
+    function decQty(btn){
+      const box = btn.closest('.qty');
+      const input = box.querySelector('input[name="quantity"]');
+      const span = box.querySelector('.qty-val');
+
+      let val = parseInt(input.value || "1", 10);
+      if(val > 1){
+        val--;
+        input.value = val;
+        span.textContent = val;
+      }
+    }
+  </script>
 
   {% endif %}
 </section>
-
-<script>
-function incQty(btn){
-  const box = btn.parentElement;
-  const input = box.querySelector('input[name="quantity"]');
-  const span = box.querySelector('span');
-  let val = parseInt(input.value || "1", 10);
-  if(val < 20){
-    val++;
-    input.value = val;
-    span.textContent = val;
-  }
-}
-function decQty(btn){
-  const box = btn.parentElement;
-  const input = box.querySelector('input[name="quantity"]');
-  const span = box.querySelector('span');
-  let val = parseInt(input.value || "1", 10);
-  if(val > 1){
-    val--;
-    input.value = val;
-    span.textContent = val;
-  }
-}
-</script>
 {% endblock %}
