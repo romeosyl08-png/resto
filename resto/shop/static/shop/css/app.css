@@ -4,6 +4,27 @@
    ========================================================= */
 
 /* ---------- Tokens ---------- */
+/* Labels visibles dans les cartes blanches */
+.card label,
+.card .form-label {
+  color: #111827 !important;
+  font-weight: 600;
+}
+
+/* Inputs lisibles */
+.card input,
+.card textarea,
+.card select {
+  color: #111827;
+}
+
+/* Si tu as un style global qui force tout en blanc */
+.page-surface .card label,
+.page-surface .card .form-label {
+  color: #111827 !important;
+}
+.card p > label { color:#111827 !important; }
+
 :root{
   --radius: 18px;
 
