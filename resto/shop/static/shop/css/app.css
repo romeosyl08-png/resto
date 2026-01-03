@@ -285,3 +285,61 @@ hr{ border-color: rgba(255,255,255,.12); }
 @media (prefers-reduced-motion: reduce){
   *{ scroll-behavior: auto !important; }
 }
+
+
+/* === FORMS IN LIGHT CARDS (ex: profile, admin) === */
+.card.bg-white,
+.card[style*="background: #fff"],
+@media (min-width: 992px) {
+  .card { background: #fff; }
+}
+
+/* Quand la card est claire, on force un formulaire clair */
+.card{
+  /* variable locale, overwritten si besoin */
+  --card-fg: var(--text);
+  --card-muted: var(--muted);
+  --card-input-bg: rgba(255,255,255,.06);
+  --card-input-border: rgba(255,255,255,.14);
+  --card-input-fg: var(--text);
+  --card-label: var(--text);
+}
+
+/* Desktop (cards blanches) -> bascule auto en clair */
+@media (min-width: 992px){
+  .card{
+    --card-fg: #111827;
+    --card-muted: rgba(17,24,39,.60);
+    --card-input-bg: #fff;
+    --card-input-border: rgba(17,24,39,.14);
+    --card-input-fg: #111827;
+    --card-label: #111827;
+  }
+}
+
+/* Application des variables */
+.card,
+.card .card-body{
+  color: var(--card-fg);
+}
+
+.card .text-muted{ color: var(--card-muted) !important; }
+
+.card label,
+.card .form-label{
+  color: var(--card-label) !important;
+  font-weight: 600;
+}
+
+.card .form-control,
+.card .form-select,
+.card textarea{
+  background: var(--card-input-bg) !important;
+  border: 1px solid var(--card-input-border) !important;
+  color: var(--card-input-fg) !important;
+}
+
+.card .form-control::placeholder{
+  color: rgba(127,127,127,.65) !important;
+}
+
