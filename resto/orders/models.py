@@ -26,7 +26,7 @@ class Order(models.Model):
 
     customer_name = models.CharField(max_length=150)
     phone = models.CharField(max_length=10)
-    address = models.TextField()
+    address = models.TextField(blank=True ,default="salle de Master 1 IMERTEL")
 
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
     discount_total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
