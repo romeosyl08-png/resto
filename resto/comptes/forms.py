@@ -14,4 +14,14 @@ class ProfileForm(forms.ModelForm):
 
     class Meta:
         model = UserProfile
-        fields = ["customer_name", "phone", "address"]
+        fields = ["full_name", "phone", "address"]
+
+        labels = {
+            "full_name": "Nom",
+            "phone": "Téléphone",
+        }
+
+        widgets = {
+            "full_name": forms.TextInput(attrs={"class": "form-control"}),
+            "phone": forms.TextInput(attrs={"class": "form-control"}),
+        }
