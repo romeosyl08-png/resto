@@ -24,7 +24,7 @@ class CheckoutForm(forms.ModelForm):
         widget=forms.Textarea(attrs={
             "class": "form-control",
             "rows": 3,
-            "placeholder": "Lieu précis"
+            "readonly": "readonly",
         })
     )
 
