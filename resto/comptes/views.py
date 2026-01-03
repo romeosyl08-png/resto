@@ -54,12 +54,20 @@ def profile(request):
         .annotate(n=Count("id"))
     )
     counts_map = {x["status"]: x["n"] for x in status_counts}
+    
+    counts = {
+    "pending": counts_map.get("pending", 0),
+    "confirmed": counts_map.get("confirmed", 0),
+    "delivered": counts_map.get("delivered", 0),
+    "canceled": counts_map.get("canceled", 0),
+}
+
 
     return render(request, "registration/profile.html", {
         "form": form,
         "orders": qs,
         "status": status,
-        "counts": counts_map,
+        "counts": counts,
 
         "loyalty_points": loyalty.stamps, # points restants (0..7)
         "free_vouchers": vouchers_available,      # bons gratuits dispo
