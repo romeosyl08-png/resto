@@ -13,8 +13,8 @@ class UserProfile(models.Model):
         related_name="profile"
     )
     full_name = models.CharField(max_length=150, blank=True)
-    phone = models.CharField(max_length=30, blank=True)
-    address = models.TextField(blank=True)
+    phone = models.CharField(max_length=10, blank=True)
+    address = models.TextField(blank=True ,default="salle de Master 1 IMERTEL")
 
     def __str__(self):
         return f"Profil de {self.user.username}"
