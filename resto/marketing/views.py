@@ -5,7 +5,6 @@ from django.shortcuts import get_object_or_404
 
 from orders.models import Order
 from .serializers import PromoApplySerializer, ReferralApplySerializer, VoucherRedeemSerializer, VoucherSerializer
-from .services import PromoService, ReferralService, LoyaltyService
 from .models import FreeItemVoucher
 
 
