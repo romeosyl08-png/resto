@@ -29,9 +29,13 @@
 
     <a class="bn-item position-relative" href="{% url 'orders:cart_detail' %}">
       Panier
-      <span id="cart-badge">
-        {% include "orders/partials/cart_badge.html" %}
-      </span>
+            {% with c=cart|default:'' %}
+              {% if c and c|length > 0 %}
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                  {{ cart|length }}
+                </span>
+              {% endif %}
+            {% endwith %}
     </a>
 
     {% if user.is_authenticated %}
