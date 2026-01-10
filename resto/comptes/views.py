@@ -37,9 +37,14 @@ def profile(request):
         form = ProfileForm(instance=profile_obj)
 
     # --- Fidélité ---
+
     loyalty, _ = LoyaltyAccount.objects.get_or_create(user=request.user)
-    
-    vouchers_available = FreeItemVoucher.objects.filter(user=request.user,status="AVAILABLE").count()
+
+    free_vouchers = FreeItemVoucher.objects.filter(
+        user=request.user,
+        status=FreeItemVoucher.Status.AVAILABLE
+    ).count()
+
 
     # --- Filtre statut commandes ---
     status = request.GET.get("status", "all")
@@ -70,5 +75,5 @@ def profile(request):
         "counts": counts,
 
         "loyalty_points": loyalty.stamps, # points restants (0..7)
-        "free_vouchers": vouchers_available,      # bons gratuits dispo
+        "free_vouchers": free_vouchers,      # bons gratuits dispo
     })

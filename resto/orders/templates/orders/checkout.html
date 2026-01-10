@@ -13,12 +13,14 @@
           <span>Sous-total</span>
           <span>{{ cart.get_subtotal_price }} FCFA</span>
         </li>
+
         <li class="list-group-item d-flex justify-content-between">
           <span>Remise {% if cart.promo_code %}({{ cart.promo_code }}){% endif %}</span>
           <span>- {{ cart.get_discount_amount }} FCFA</span>
         </li>
+
         <li class="list-group-item d-flex justify-content-between fw-bold">
-          <span>Total à payer</span>
+          <span>Total</span>
           <span>{{ cart.get_total_after_discount }} FCFA</span>
         </li>
     </ul>

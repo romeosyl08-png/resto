@@ -1,8 +1,7 @@
 from decimal import Decimal
 from django.conf import settings
 from django.db import models
-
-from shop.models import Meal  # adapte si ton app repas a un autre nom
+from shop.models import Meal
 
 
 class Order(models.Model):
@@ -16,17 +15,15 @@ class Order(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
+        null=True, blank=True,
         related_name="orders",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
-    confirmed_at = models.DateTimeField(null=True, blank=True)
 
     customer_name = models.CharField(max_length=150)
-    phone = models.CharField(max_length=10)
-    address = models.TextField(blank=True ,default="salle de Master 1 IMERTEL")
+    phone = models.CharField(max_length=20)
+    address = models.TextField(blank=True, default="")
 
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
     discount_total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
@@ -41,7 +38,7 @@ class Order(models.Model):
         for item in self.items.all():
             sub += item.subtotal()
         self.subtotal = sub
-        self.total = max(Decimal("0.00"), sub - self.discount_total)
+        self.total = max(Decimal("0.00"), sub - (self.discount_total or Decimal("0.00")))
 
     def __str__(self):
         return f"Commande #{self.id} - {self.customer_name}"
@@ -55,31 +52,3 @@ class OrderItem(models.Model):
 
     def subtotal(self):
         return self.quantity * self.unit_price
-
-
-class LoyaltyAccount(models.Model):
-    user = models.ForeignKey(
-    settings.AUTH_USER_MODEL,
-    on_delete=models.CASCADE,
-    null=True,
-    blank=True,
-    related_name="loyalty_account",
-    )
-    points = models.PositiveIntegerField(default=0)  # nb de plats cumulés
-    updated_at = models.DateTimeField(auto_now=True)
-
-
-class FreeMealVoucher(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="free_meal_vouchers"
-    )
-    is_used = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    used_order = models.ForeignKey(
-        "orders.Order",
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )

@@ -11,8 +11,8 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from .forms import MealForm
 
-from orders.loyalty import apply_loyalty_on_delivery  # import
-from marketing.models import LoyaltyAccount, FreeItemVoucher 
+
+from marketing.services import LoyaltyService
 # Create your views here.
 
 @staff_member_required
@@ -138,9 +138,11 @@ def mark_order_delivered(request, order_id):
         order.status = "delivered"
         order.save(update_fields=["status"])
 
-        apply_loyalty_on_delivery(order)
+        LoyaltyService.on_order_delivered(order)
 
     return redirect("staff:admin_dashboard")
+
+
 
 
 
