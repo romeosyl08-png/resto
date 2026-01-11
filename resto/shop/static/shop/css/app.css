@@ -1,387 +1,173 @@
-/* =========================================================
-   Resto UI — Mobile first “Instagram / Uber Eats” style
-   Drop-in replacement (paste as your main stylesheet)
-   ========================================================= */
+/* shop/static/shop/css/app.css */
 
-/* ---------- Tokens ---------- */
-/* Labels visibles dans les cartes blanches */
-.card label,
-.card .form-label {
-  color: #111827 !important;
-  font-weight: 600;
-}
-
-/* Inputs lisibles */
-.card input,
-.card textarea,
-.card select {
-  color: #111827;
-}
-
-/* Si tu as un style global qui force tout en blanc */
-.page-surface .card label,
-.page-surface .card .form-label {
-  color: #111827 !important;
-}
-.card p > label { color:#111827 !important; }
-
+/* ===== Base ===== */
 :root{
-  --radius: 18px;
-
-  --bg: #0b0e13;
-  --surface: rgba(255,255,255,.06);
-  --surface-2: rgba(255,255,255,.09);
-  --border: rgba(255,255,255,.10);
-
-  --text: rgba(255,255,255,.92);
-  --muted: rgba(255,255,255,.68);
-
-  --shadow: 0 18px 45px rgba(0,0,0,.45);
-
-  --brand: #ff4d2d;      /* CTA */
-  --brand-2: #ffb84d;    /* hover highlight */
+  --bg:#0b0c10;
+  --surface: rgba(255,255,255,.08);
+  --surface2: rgba(255,255,255,.06);
+  --border: rgba(255,255,255,.14);
+  --text:#fff;
+  --text2: rgba(255,255,255,.86);
+  --muted: rgba(255,255,255,.66);
+  --danger:#ff3b30;
+  --radius:18px;
+  --blur:12px;
 }
 
-/* ---------- Base ---------- */
-html{
-  /* important: mobile readability */
-  font-size: 17px;
-  -webkit-text-size-adjust: 100%;
-}
-
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
 body{
-  margin: 0;
+  margin:0;
+  background: var(--bg);
   color: var(--text);
+  font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+}
+
+/* fond léger comme ta capture */
+body::before{
+  content:"";
+  position:fixed; inset:0;
   background:
-    radial-gradient(1200px 600px at 20% 0%, rgba(255,184,77,.12), transparent 60%),
-    radial-gradient(900px 500px at 90% 10%, rgba(255,77,45,.10), transparent 55%),
-    linear-gradient(180deg, #0b0e13 0%, #0b0e13 55%, #0f131b 100%);
+    radial-gradient(1000px 520px at 20% 10%, rgba(6,193,103,.10), transparent 60%),
+    radial-gradient(900px 520px at 90% 90%, rgba(255,59,48,.08), transparent 60%);
+  pointer-events:none;
+  z-index:-1;
 }
 
-a{ color: inherit; }
-a:hover{ color: inherit; }
+a{ color:inherit; text-decoration:none; }
+.container{ max-width: 1100px; }
 
-.container{
-  /* tighter like mobile apps */
-  padding-left: 14px;
-  padding-right: 14px;
-}
-
-/* ---------- Typography (Uber Eats-ish) ---------- */
-h1,h2,h3,h4,h5{
-  letter-spacing: -.2px;
-  margin-bottom: .6rem;
-}
-h1{ font-size: 1.55rem; line-height: 1.15; }
-h2{ font-size: 1.25rem; line-height: 1.2; }
-h3{ font-size: 1.10rem; line-height: 1.25; }
-
-.small, small{ font-size: .95rem; }
-.text-muted{ color: var(--muted) !important; }
-
-/* ---------- Surfaces / Cards ---------- */
-.card{
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-}
-
-.card-body{ padding: 14px; }
-
-.card-img-top{
-  border-top-left-radius: var(--radius);
-  border-top-right-radius: var(--radius);
-}
-
-/* ---------- Images ---------- */
-.meal-img,
-.meal-img-lg{
-  width: 100%;
-  aspect-ratio: 16/10;
-  object-fit: cover;
-  border-radius: 16px;
-}
-
-/* ---------- Buttons (app-like) ---------- */
-.btn{
-  border-radius: 14px;
-  font-weight: 700;
-  letter-spacing: .1px;
-}
-
-.btn-dark{
-  background: #111827;
-  border-color: #111827;
-}
-
-.btn-primary{
-  background: var(--brand);
-  border-color: var(--brand);
-}
-.btn-primary:hover{ filter: brightness(.95); }
-
-.btn-outline-secondary{
-  color: var(--text);
-  border-color: rgba(255,255,255,.18);
-}
-.btn-outline-secondary:hover{
-  background: rgba(255,255,255,.10);
-  border-color: rgba(255,255,255,.22);
-  color: var(--text);
-}
-
-/* Pill buttons (categories) */
-.btn.btn-sm{
-  padding: .45rem .75rem;
-  font-size: .95rem;
-  border-radius: 999px;
-}
-
-/* ---------- Badges ---------- */
-.badge{
-  border-radius: 999px;
-  font-weight: 700;
-}
-.badge.text-bg-primary,
-.bg-danger{
-  background-color: var(--brand) !important;
-}
-
-/* ---------- Navbar (sticky like apps) ---------- */
-.navbar{
+/* ===== TOP AREA ===== */
+.top-shell{
   position: sticky;
-  top: 0;
-  z-index: 1030;
-}
-
-.navbar-food{
-  background:
-    linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.55)),
-    url("https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1600&q=80");
-  background-size: cover;
-  background-position: center;
-  backdrop-filter: blur(10px);
+  top:0;
+  z-index:1000;
+  background: rgba(10,12,16,.86);
   border-bottom: 1px solid rgba(255,255,255,.10);
+  backdrop-filter: blur(var(--blur)) saturate(140%);
 }
 
-.navbar-brand{
+.top-inner{
+  padding: 14px 16px 10px;
+}
+
+.top-brand-row{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 12px;
+}
+
+.top-brand{
   font-weight: 900;
-  letter-spacing: .2px;
+  letter-spacing: -.02em;
+  font-size: 1.1rem;
 }
 
-.navbar-food .navbar-brand,
-.navbar-food .nav-link{
-  color: #fff !important;
-  font-weight: 700;
+.top-cart-badge{ position: relative; width: 44px; height: 28px; }
+.badge-dot{
+  position:absolute;
+  right:0;
+  top:0;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 900;
+  font-size: .9rem;
+  background: var(--danger);
+  color:#fff;
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
 }
 
-.navbar-food .nav-link:hover{
-  color: var(--brand-2) !important;
+/* liens verticaux à gauche */
+.top-links{
+  margin-top: 10px;
+  display:flex;
+  flex-direction: column;
+  gap: 12px;
+  width: max-content;
 }
 
-/* ---------- Main content spacing (make header visible without scrolling) ---------- */
-.main-content{
-  min-height: 100vh;
-  padding-top: 10px !important;
-  padding-bottom: 14px !important;
+.top-links a{
+  color: var(--text2);
+  font-weight: 800;
+  padding: 2px 0;
 }
+.top-links a:hover{ color:#fff; }
 
-/* ---------- “Page surface” (hero background card) ---------- */
-.page-surface{
-  background:
-    linear-gradient(rgba(0,0,0,.40), rgba(0,0,0,.40)),
-    url("https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&w=1600&q=80");
-  background-size: cover;
-  background-position: center;
-  color: white;
-  border-radius: 22px;
-  border: 1px solid rgba(255,255,255,.12);
-  box-shadow: 0 25px 60px rgba(0,0,0,.55);
+/* logout centré */
+.top-logout{
+  margin-top: 8px;
+  display:flex;
+  justify-content:center;
 }
-
-/* ---------- Hero (compact, visible immediately) ---------- */
-.hero-food{
+.btn-logout{
   background: transparent;
-  color: inherit;
-  border-radius: 18px !important;
+  border: 0;
+  color: var(--text2);
+  font-weight: 800;
+  padding: 6px 10px;
 }
 
-.hero-food .card-body{
-  padding: 16px !important;
+/* ===== CONTENT ===== */
+.main-content{
+  min-height: calc(100vh - 160px);
+  padding: 18px 0 92px; /* espace pour bottom nav */
 }
 
-.hero-food h1{
-  font-size: 1.55rem !important;
-  line-height: 1.12 !important;
-}
-
-.hero-food p{
-  font-size: 1.00rem !important;
-  color: rgba(255,255,255,.88);
-  margin-bottom: .75rem;
-}
-
-/* ---------- Inputs (Instagram-ish) ---------- */
-.form-control, .form-select{
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.06);
-  color: var(--text);
-}
-.form-control::placeholder{ color: rgba(255,255,255,.55); }
-.form-control:focus, .form-select:focus{
-  border-color: rgba(255,184,77,.55);
-  box-shadow: 0 0 0 .2rem rgba(255,184,77,.12);
-  background: rgba(255,255,255,.07);
-  color: var(--text);
-}
-
-/* ---------- Tables (for staff / profile) ---------- */
-.table{
-  color: var(--text);
-}
-.table thead.table-light{
-  --bs-table-bg: rgba(255,255,255,.06);
-  --bs-table-color: var(--text);
-}
-.table td, .table th{
-  border-color: rgba(255,255,255,.10);
-}
-
-/* ---------- Cart / summary cards look tighter ---------- */
-hr{ border-color: rgba(255,255,255,.12); }
-
-/* ---------- Desktop: keep your original “bright” vibe if you want ---------- */
-@media (min-width: 992px){
-  html{ font-size: 16px; }
-
-  body{
-    color: #111827;
-    background:
-      radial-gradient(1200px 600px at 20% 0%, rgba(255,184,77,.18), transparent 60%),
-      radial-gradient(900px 500px at 90% 10%, rgba(255,99,71,.14), transparent 55%),
-      linear-gradient(180deg, #fff7ed 0%, #f6f7f9 60%, #f3f4f6 100%);
-  }
-
-  .card{
-    background: #fff;
-    border: 0;
-    box-shadow: 0 10px 30px rgba(17,24,39,.10);
-  }
-
-  .text-muted{ color: rgba(17,24,39,.60) !important; }
-
-  .form-control, .form-select{
-    background: #fff;
-    color: #111827;
-    border: 1px solid rgba(17,24,39,.14);
-  }
-
-  .navbar-food .nav-link:hover{ color: #ffb84d !important; }
-}
-
-/* ---------- Reduce motion ---------- */
-@media (prefers-reduced-motion: reduce){
-  *{ scroll-behavior: auto !important; }
-}
-
-
-/* === FORMS IN LIGHT CARDS (ex: profile, admin) === */
-.card.bg-white,
-.card[style*="background: #fff"],
-@media (min-width: 992px) {
-  .card { background: #fff; }
-}
-
-/* Quand la card est claire, on force un formulaire clair */
-.card{
-  /* variable locale, overwritten si besoin */
-  --card-fg: var(--text);
-  --card-muted: var(--muted);
-  --card-input-bg: rgba(255,255,255,.06);
-  --card-input-border: rgba(255,255,255,.14);
-  --card-input-fg: var(--text);
-  --card-label: var(--text);
-}
-
-/* Desktop (cards blanches) -> bascule auto en clair */
-@media (min-width: 992px){
-  .card{
-    --card-fg: #111827;
-    --card-muted: rgba(17,24,39,.60);
-    --card-input-bg: #fff;
-    --card-input-border: rgba(17,24,39,.14);
-    --card-input-fg: #111827;
-    --card-label: #111827;
-  }
-}
-
-/* Application des variables */
-.card,
-.card .card-body{
-  color: var(--card-fg);
-}
-
-.card .text-muted{ color: var(--card-muted) !important; }
-
-.card label,
-.card .form-label{
-  color: var(--card-label) !important;
-  font-weight: 600;
-}
-
-.card .form-control,
-.card .form-select,
-.card textarea{
-  background: var(--card-input-bg) !important;
-  border: 1px solid var(--card-input-border) !important;
-  color: var(--card-input-fg) !important;
-}
-
-.card .form-control::placeholder{
-  color: rgba(127,127,127,.65) !important;
-}
-/* Bottom nav mobile */
+/* ===== BOTTOM NAV ===== */
 .bottom-nav{
-  display:none;
+  position: fixed;
+  left:0; right:0; bottom:0;
+  z-index:1100;
+  background: rgba(10,12,16,.92);
+  border-top: 1px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(var(--blur)) saturate(140%);
+  padding: 12px 14px;
+  display:flex;
+  justify-content: space-around;
+  align-items:center;
 }
 
-@media (max-width: 991.98px){
-  body{ padding-bottom: 74px; }
-
-  .bottom-nav{
-    display:flex;
-    position:fixed;
-    left:0; right:0; bottom:0;
-    z-index:1100;
-    background: rgba(10,12,16,.92);
-    border-top: 1px solid rgba(255,255,255,.12);
-    backdrop-filter: blur(12px) saturate(140%);
-    padding: 10px 14px;
-    justify-content: space-around;
-    gap: 8px;
-  }
-
-  .bn-item{
-    padding: 10px 12px;
-    border-radius: 999px;
-    font-weight: 900;
-    color: rgba(255,255,255,.88) !important;
-    text-decoration:none;
-    position:relative;
-  }
-
-  .bn-item:hover{
-    background: rgba(255,255,255,.10);
-    color: #fff !important;
-  }
-
-  .bn-badge{
-    position:absolute;
-    top: -2px;
-    right: -8px;
-    transform: translate(50%,-50%);
-  }
+.bn-item{
+  color: var(--text2);
+  font-weight: 900;
+  padding: 10px 14px;
+  border-radius: 999px;
+  position: relative;
+}
+.bn-item:hover{
+  background: rgba(255,255,255,.08);
+  color:#fff;
 }
 
+/* badge au centre au-dessus de “Panier” */
+.bn-cart{ padding-bottom: 14px; }
+.bn-badge{
+  position:absolute;
+  left:50%;
+  transform: translateX(-50%);
+  top:-10px;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 950;
+  font-size: .85rem;
+  background: var(--danger);
+  color:#fff;
+  box-shadow: 0 10px 24px rgba(0,0,0,.35);
+}
+
+/* ===== Desktop : tu peux faire évoluer ensuite ===== */
+@media (min-width: 992px){
+  .top-links{ flex-direction: row; gap: 18px; }
+  .top-logout{ justify-content:flex-end; }
+  .bottom-nav{ display:none; } /* sur desktop, on cache la bottom bar */
+  .main-content{ padding-bottom: 24px; }
+}
