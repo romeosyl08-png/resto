@@ -1,4 +1,17 @@
 /* shop/static/shop/css/app.css */
+html, body { height: 100%; }
+body { background: #0b0c10; }
+
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(1100px 600px at 20% 10%, rgba(6,193,103,.10) 0%, transparent 60%),
+    radial-gradient(900px 500px at 90% 90%, rgba(255,59,48,.08) 0%, transparent 55%);
+  z-index: -1;
+  pointer-events: none;
+}
 
 /* ===== Base ===== */
 :root{
@@ -171,3 +184,27 @@ a{ color:inherit; text-decoration:none; }
   .bottom-nav{ display:none; } /* sur desktop, on cache la bottom bar */
   .main-content{ padding-bottom: 24px; }
 }
+
+.top-links-desktop{
+  margin-top: 10px;
+  display:flex;
+  gap: 18px;
+  align-items:center;
+  justify-content:flex-start;
+}
+.top-links-desktop a{
+  color: var(--text2);
+  font-weight: 900;
+  padding: 10px 12px;
+  border-radius: 999px;
+}
+.top-links-desktop a:hover{
+  background: rgba(255,255,255,.08);
+  color:#fff;
+}
+.top-links-desktop form{ margin:0; }
+.bottom-nav{ display:flex; }
+@media (min-width: 992px){
+  .bottom-nav{ display:none; }
+}
+
