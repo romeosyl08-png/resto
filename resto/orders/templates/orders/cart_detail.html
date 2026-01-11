@@ -130,5 +130,24 @@
     </div>
 
   </div>
+<form method="post" action="{% url 'orders:cart_apply_promo' %}" class="d-flex gap-2">
+  {% csrf_token %}
+  <input type="text" name="promo_code" class="form-control" placeholder="Code promo"
+         value="{{ cart.promo_code|default_if_none:'' }}">
+  <button class="btn btn-dark">Appliquer</button>
+</form>
+
+{% if promo_msg %}
+  <div class="alert {% if promo_ok %}alert-success{% else %}alert-danger{% endif %} mt-2">
+    {{ promo_msg }}
+  </div>
+{% endif %}
+
+{% if cart.promo_code %}
+  <form method="post" action="{% url 'orders:cart_remove_promo' %}" class="mt-2">
+    {% csrf_token %}
+    <button class="btn btn-outline-secondary btn-sm">Retirer le code</button>
+  </form>
+{% endif %}
 </div>
 {% endblock %}
