@@ -1,0 +1,13 @@
+{% extends "admin/base.html" %}
+
+{% block branding %}
+  <h1 id="site-name">
+    <a href="{% url 'admin:index' %}">Administration Resto</a>
+  </h1>
+{% endblock %}
+
+{% block nav-global %}
+  <div style="margin-top:10px;">
+    <a href="{% url 'staff:admin_dashboard' %}">Dashboard</a>
+  </div>
+{% endblock %}
