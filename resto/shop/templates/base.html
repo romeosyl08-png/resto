@@ -12,43 +12,57 @@
 </head>
 
 <body>
-  {# ===== TOP AREA (comme sur ta capture) ===== #}
-  <header class="top-shell">
-    <div class="top-inner container">
-      <div class="top-brand-row">
-        <a class="top-brand" href="{% url 'shop:meal_list' %}">Resto Cuistot</a>
+<header class="top-shell">
+  <div class="top-inner container">
+    <div class="top-brand-row">
+      <a class="top-brand" href="{% url 'shop:meal_list' %}">Resto Cuistot</a>
 
-        {# badge panier en haut (à droite) #}
-        <a class="top-cart-badge" href="{% url 'orders:cart_detail' %}">
-          {% with c=cart|default:'' %}
-            {% if c and c|length > 0 %}
-              <span class="badge-dot">{{ c|length }}</span>
-            {% endif %}
-          {% endwith %}
-        </a>
-      </div>
-
-      <nav class="top-links">
-        <a href="{% url 'shop:meal_list' %}">Menu</a>
-        <a href="{% url 'orders:cart_detail' %}">Panier</a>
-
-        {% if user.is_authenticated %}
-          <a href="{% url 'comptes:profile' %}">{{ user.username }}</a>
-        {% else %}
-          <a href="{% url 'comptes:login' %}">Profil</a>
-        {% endif %}
-      </nav>
-
-      <div class="top-logout">
-        {% if user.is_authenticated %}
-          <form method="post" action="{% url 'comptes:logout' %}">
-            {% csrf_token %}
-            <button type="submit" class="btn-logout">Déconnexion</button>
-          </form>
-        {% endif %}
-      </div>
+      <a class="top-cart-badge" href="{% url 'orders:cart_detail' %}">
+        {% with c=cart|default:'' %}
+          {% if c and c|length > 0 %}
+            <span class="badge-dot">{{ c|length }}</span>
+          {% endif %}
+        {% endwith %}
+      </a>
     </div>
-  </header>
+
+    <!-- MOBILE links (comme ta capture) -->
+    <nav class="top-links d-lg-none">
+      <a href="{% url 'shop:meal_list' %}">Menu</a>
+      <a href="{% url 'orders:cart_detail' %}">Panier</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'comptes:profile' %}">{{ user.username }}</a>
+      {% else %}
+        <a href="{% url 'comptes:login' %}">Profil</a>
+      {% endif %}
+    </nav>
+
+    <!-- DESKTOP links (horizontaux) -->
+    <nav class="top-links-desktop d-none d-lg-flex">
+      <a href="{% url 'shop:meal_list' %}">Menu</a>
+      <a href="{% url 'orders:cart_detail' %}">Panier</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'comptes:profile' %}">{{ user.username }}</a>
+        <form method="post" action="{% url 'comptes:logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn-logout">Déconnexion</button>
+        </form>
+      {% else %}
+        <a href="{% url 'comptes:login' %}">Connexion</a>
+      {% endif %}
+    </nav>
+
+    <!-- logout centré (mobile) -->
+    {% if user.is_authenticated %}
+      <div class="top-logout d-lg-none">
+        <form method="post" action="{% url 'comptes:logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn-logout">Déconnexion</button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+</header>
 
   <main class="main-content">
     {% block content %}{% endblock %}
