@@ -49,42 +49,44 @@
             <hr class="my-4">
 
             <!-- Promo -->
-            <form method="post" action="{% url 'orders:cart_apply_promo' %}" class="mt-2" style="max-width: 520px;">
+            <form method="post" action="{% url 'orders:cart_apply_promo' %}" class="d-flex gap-2">
               {% csrf_token %}
-              <label class="form-label small text-muted mb-1">Code promo</label>
-              <div class="input-group">
-                <input type="text" name="promo_code" class="form-control" placeholder="Ex: WELCOME1000"
-                       value="{{ cart.promo_code|default:'' }}">
-                <button class="btn btn-outline-dark" type="submit">Appliquer</button>
-              </div>
+              <input type="text" name="promo_code" class="form-control" placeholder="Code promo"
+                    value="{{ cart.promo_code|default_if_none:'' }}">
+              <button class="btn btn-dark">Appliquer</button>
             </form>
 
+            {% if promo_msg %}
+              <div class="alert {% if promo_ok %}alert-success{% else %}alert-danger{% endif %} mt-2">
+                {{ promo_msg }}
+              </div>
+            {% endif %}
+
             {% if cart.promo_code %}
-              <form method="post" action="{% url 'orders:cart_remove_promo' %}" class="mt-2" style="max-width: 520px;">
+              <form method="post" action="{% url 'orders:cart_remove_promo' %}" class="mt-2">
                 {% csrf_token %}
-                <button class="btn btn-sm btn-outline-secondary w-100" type="submit">
-                  Retirer le code ({{ cart.promo_code }})
-                </button>
+                <button class="btn btn-outline-secondary btn-sm">Retirer le code</button>
               </form>
             {% endif %}
 
             <hr class="my-3">
 
             <!-- Totaux -->
-            <div class="d-flex justify-content-between mb-2">
-              <span class="text-muted">Sous-total</span>
-              <span class="fw-semibold">{{ cart.get_subtotal_price }} FCFA</span>
-            </div>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>Sous-total</span>
+              <span>{{ cart.get_subtotal_price }} FCFA</span>
+            </li>
 
-            <div class="d-flex justify-content-between mb-2">
-              <span class="text-muted">Remise</span>
-              <span class="fw-semibold">- {{ cart.get_discount_amount }} FCFA</span>
-            </div>
+            <li class="list-group-item d-flex justify-content-between">
+              <span>Remise {% if cart.promo_code %}({{ cart.promo_code }}){% endif %}</span>
+              <span>- {{ cart.get_discount_amount }} FCFA</span>
+            </li>
 
-            <div class="d-flex justify-content-between mb-2">
-              <span class="text-muted">Total à payer</span>
-              <span class="fw-bold">{{ cart.get_total_after_discount }} FCFA</span>
-            </div>
+            <li class="list-group-item d-flex justify-content-between fw-bold">
+              <span>Total</span>
+              <span>{{ cart.get_total_after_discount }} FCFA</span>
+            </li>
+
 
           {% else %}
             <div class="alert alert-secondary">Ton panier est vide.</div>

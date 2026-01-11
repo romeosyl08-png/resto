@@ -1,44 +1,25 @@
 from django.shortcuts import redirect, render
-
-from marketing.models import LoyaltyAccount
-from orders.loyalty import count_meals
 from .cart import Cart
 from comptes.models import UserProfile
-from .models import FreeMealVoucher, Order, OrderItem
+from .models import Order, OrderItem
 from .forms import CheckoutForm
 from django.contrib.auth.decorators import login_required
-from orders.cart import Cart
 from django.views.decorators.http import require_POST
+from decimal import Decimal
 
-from django.db import transaction
-
+from marketing.services import PromoService, LoyaltyService
 
 @require_POST
 def cart_add(request, meal_id):
     cart = Cart(request)
-    try:
-        qty = int(request.POST.get("quantity", 1))
-    except (TypeError, ValueError):
-        qty = 1
-    cart.add(meal_id=meal_id, quantity=qty)
-    return redirect("orders:cart_detail")
+    cart.add(meal_id=meal_id, quantity=1)
+    return redirect('orders:cart_detail')
 
 
 def cart_remove(request, meal_id):
     cart = Cart(request)
     cart.remove(meal_id)
     return redirect('orders:cart_detail')
-
-
-def cart_detail(request):
-    cart = Cart(request)
-    promo_msg = request.session.pop("promo_msg", None)
-    promo_ok = request.session.pop("promo_ok", None)
-    return render(request, "orders/cart_detail.html", {
-        "cart": cart,
-        "promo_msg": promo_msg,
-        "promo_ok": promo_ok,
-    })
 
 
 @require_POST
@@ -60,68 +41,72 @@ def cart_remove_promo(request):
     request.session["promo_ok"] = True
     return redirect("orders:cart_detail")
 
-
-@login_required(login_url='comptes:login')
-def checkout(request):
+def cart_detail(request):
     cart = Cart(request)
-    if not list(cart):
-        return redirect('shop:meal_list')
-
-    # Toujours avoir un profil disponible
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
-
-    if request.method == 'POST':
-        form = CheckoutForm(request.POST)
-        if form.is_valid():
-            # Mettre à jour le profil
-            profile.full_name = form.cleaned_data['customer_name']
-            profile.phone = form.cleaned_data['phone']
-            profile.address = form.cleaned_data['address']
-            profile.save()
-
-            # Créer la commande
-            order = Order.objects.create(
-                user=request.user,
-                customer_name=profile.full_name,
-                phone=profile.phone,
-                address=profile.address,
-                total=cart.get_total_price(),
-            )
-
-            voucher = FreeMealVoucher.objects.filter(
-                user=request.user,
-                is_used=False
-            ).first()
-
-            if voucher:
-                # appliquer remise équivalente à 1 plat
-                voucher.is_used = True
-                voucher.used_order = order
-                voucher.save()
-
-            for item in cart:
-                OrderItem.objects.create(
-                    order=order,
-                    meal=item['meal'],
-                    quantity=item['quantity'],
-                    unit_price=item['meal'].price
-                )
-
-            cart.clear()
-            return render(request, 'orders/checkout_success.html', {'order': order})
-    else:
-        form = CheckoutForm(initial={
-            'customer_name': profile.full_name,
-            'phone': profile.phone,
-            'address': profile.address,
-        })
-
-    return render(request, 'orders/checkout.html', {
-        'cart': cart,
-        'form': form,
+    promo_msg = request.session.pop("promo_msg", None)
+    promo_ok = request.session.pop("promo_ok", None)
+    return render(request, "orders/cart_detail.html", {
+        "cart": cart,
+        "promo_msg": promo_msg,
+        "promo_ok": promo_ok,
     })
 
 
 
 
 
+@login_required(login_url="comptes:login")
+def checkout(request):
+    cart = Cart(request)
+    if not list(cart):
+        return redirect("shop:meal_list")
+
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+    if request.method == "POST":
+        form = CheckoutForm(request.POST)
+        if form.is_valid():
+            profile.full_name = form.cleaned_data["customer_name"]
+            profile.phone = form.cleaned_data["phone"]
+            profile.address = form.cleaned_data["address"]
+            profile.save()
+
+            order = Order.objects.create(
+                user=request.user,
+                customer_name=profile.full_name,
+                phone=profile.phone,
+                address=profile.address,
+                subtotal=Decimal("0.00"),
+                discount_total=Decimal("0.00"),
+                total=Decimal("0.00"),
+            )
+
+            for item in cart:
+                OrderItem.objects.create(
+                    order=order,
+                    meal=item["meal"],
+                    quantity=item["quantity"],
+                    unit_price=item["meal"].price,
+                )
+
+            order.recompute_subtotal()
+            order.save(update_fields=["subtotal", "total"])
+
+            # 1) promo (si tu as un champ promo_code dans le form ou request.POST)
+            promo_code = request.POST.get("promo_code", "").strip()
+            if promo_code:
+                PromoService.apply_to_order(request.user, order, promo_code)
+
+            # 2) voucher (1 bon max)
+            LoyaltyService.apply_best_voucher_to_order(request.user, order)
+
+            cart.clear()
+            return render(request, "orders/checkout_success.html", {"order": order})
+    else:
+        form = CheckoutForm(initial={
+            "customer_name": profile.full_name,
+            "phone": profile.phone,
+            "address": profile.address,
+        })
+
+    return render(request, "orders/checkout.html", {"cart": cart, "form": form})
