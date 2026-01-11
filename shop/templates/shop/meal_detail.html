@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}{{ meal.name }} – Resto{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="hero card border-0 shadow-sm hero-food">
+
+        {% if meal.image %}
+          <img src="{{ meal.image.url }}" class="meal-img-lg" alt="{{ meal.name }}">
+        {% else %}
+          <img src="https://via.placeholder.com/1200x675?text=Resto" class="meal-img-lg" alt="{{ meal.name }}">
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <h1 class="h4 fw-bold mb-1">{{ meal.name }}</h1>
+            <span class="badge text-bg-primary fs-6">{{ meal.price }} FCFA</span>
+          </div>
+
+          <div class="text-muted small mb-3">{{ meal.category.name }}</div>
+
+          {% if meal.description %}
+            <p class="mb-4">{{ meal.description }}</p>
+          {% else %}
+            <p class="mb-4 text-muted">Aucune description. Mais tu sais très bien pourquoi tu es là.</p>
+          {% endif %}
+
+          <div class="d-grid gap-2">
+           <form method="post" action="{% url 'orders:cart_add' meal.id %}">
+  {% csrf_token %}
+
+<div class="d-flex align-items-center gap-2">
+  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="decQty(this)">−</button>
+
+  <input type="hidden" name="quantity" value="1">
+  <span class="fw-semibold">1</span>
+
+  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="incQty(this)">+</button>
+</div>
+
+
+  <button type="submit" class="btn btn-dark btn-lg w-100">
+    Ajouter au panier
+  </button>
+</form>
+            <a class="btn btn-outline-secondary" href="{% url 'shop:meal_list' %}">
+              Retour au menu
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}

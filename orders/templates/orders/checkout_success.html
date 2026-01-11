@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Commande confirmée{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center mt-5">
+  <div class="card shadow-lg border-0" style="max-width: 480px;">
+    <div class="card-body text-center p-4">
+
+      <div class="mb-3">
+        <svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="#28a745" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+          <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM6.97 10.03l4.242-4.243-1.06-1.06L6.97 7.91 5.383 6.324l-1.06 1.06L6.97 10.03z"/>
+        </svg>
+      </div>
+
+      <h1 class="h4 mb-3">Merci pour votre commande</h1>
+
+      <p class="text-muted mb-1">
+        Votre commande <strong>#{{ order.id }}</strong> a été enregistrée avec succès.
+      </p>
+
+      <p class="fw-bold fs-5 mb-4">
+        Total : {{ order.total }} FCFA
+      </p>
+
+      <a href="{% url 'shop:meal_list' %}" class="btn btn-primary btn-lg w-100">
+        Retour au menu
+      </a>
+
+      <p class="text-muted small mt-3">
+        Vous recevrez votre repas sous peu. Merci pour votre confiance.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
