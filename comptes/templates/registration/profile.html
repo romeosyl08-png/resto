@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Mon profil – Resto{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">Mon profil</h1>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="card card-body shadow-sm mb-3">
+      <h2 class="h5">Informations personnelles</h2>
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary btn-sm">Mettre à jour</button>
+      </form>
+    </div>
+
+    <div class="card card-body shadow-sm">
+      <h2 class="h6 mb-2">Fidélité</h2>
+
+      <div class="d-flex justify-content-between">
+        <span class="text-muted">Progression</span>
+        <span class="fw-semibold">{{ loyalty_points }}/8</span>
+      </div>
+
+      <div class="d-flex justify-content-between mt-1">
+        <span class="text-muted">Plats gratuits</span>
+        <span class="fw-semibold">{{ free_vouchers }}</span>
+      </div>
+
+      {% if free_vouchers|default:0 > 0 %}
+        <div class="alert alert-success py-2 mt-2 mb-0">
+          🎁 Tu as {{ free_vouchers }} plat(s) gratuit(s) disponible(s).
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h2 class="h5 mb-0">Mes commandes</h2>
+    </div>
+
+    <!-- Filtres -->
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <a class="btn btn-sm {% if status == 'all' %}btn-dark{% else %}btn-outline-dark{% endif %}"
+         href="?status=all">
+        Toutes
+      </a>
+
+      <a class="btn btn-sm {% if status == 'pending' %}btn-dark{% else %}btn-outline-dark{% endif %}"
+         href="?status=pending">
+        En attente ({{ counts.pending }})
+      </a>
+
+      <a class="btn btn-sm {% if status == 'confirmed' %}btn-dark{% else %}btn-outline-dark{% endif %}"
+         href="?status=confirmed">
+        Confirmées ({{ counts.confirmed }})
+      </a>
+
+      <a class="btn btn-sm {% if status == 'delivered' %}btn-dark{% else %}btn-outline-dark{% endif %}"
+         href="?status=delivered">
+        Livrées ({{ counts.delivered }})
+      </a>
+
+      <a class="btn btn-sm {% if status == 'canceled' %}btn-dark{% else %}btn-outline-dark{% endif %}"
+         href="?status=canceled">
+        Annulées ({{ counts.canceled }})
+      </a>
+    </div>
+
+    <div class="card table-card">
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Date</th>
+              <th>Total</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders %}
+              <tr>
+                <td>{{ order.id }}</td>
+                <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                <td>{{ order.total }} FCFA</td>
+                <td>{{ order.get_status_display }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="4" class="text-muted">Aucune commande pour le moment.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+      {% if user.is_authenticated %}
+        <form method="post" action="{% url 'comptes:logout' %}" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-link nav-link p-0 align-baseline">
+            Déconnexion
+          </button>
+        </form>
+      {% endif %}
+</div>
+{% endblock %}
