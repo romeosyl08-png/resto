@@ -67,3 +67,24 @@ class OrderItemAdmin(admin.ModelAdmin):
     def subtotal_display(self, obj):
         return obj.subtotal()
     subtotal_display.short_description = "Sous-total"
+
+
+class OrderItemInline(admin.TabularInline):
+    model = OrderItem
+    extra = 0
+
+    def has_change_permission(self, request, obj=None):
+        if obj and not obj.is_editable():
+            return False
+        return super().has_change_permission(request, obj)
+
+    def has_add_permission(self, request, obj=None):
+        if obj and not obj.is_editable():
+            return False
+        return super().has_add_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and not obj.is_editable():
+            return False
+        return super().has_delete_permission(request, obj)
+
