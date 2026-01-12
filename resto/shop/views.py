@@ -98,12 +98,30 @@ def meal_list(request, category_slug=None):
     if meal_of_day:
         any_variant_in_stock = any(v.stock > 0 for v in variants) if variants else (meal_of_day.stock > 0)
         sold_out = (not order_window_open) or (not any_variant_in_stock) or (not meal_of_day.is_active)
+        # shop/views.py (dans meal_list, après variants/any_variant_in_stock)
+is_closed = not order_window_open
+is_out_of_stock = bool(meal_of_day) and (not any_variant_in_stock)
+is_inactive = (not meal_of_day) or (not meal_of_day.is_active)
+
+sold_out = is_out_of_stock or is_inactive  # "sold out" = stock KO ou plat indispo, PAS horaire
+
+status_msg = None
+status_kind = None  # "closed" | "soldout" | "inactive"
+if is_inactive:
+    status_kind = "inactive"
+    status_msg = "Indisponible"
+elif is_out_of_stock:
+    status_kind = "soldout"
+    status_msg = "Rupture de stock"
+elif is_closed:
+    status_kind = "closed"
+    status_msg = f"Commandes fermées — ouvre à {OPEN_TIME.strftime('%H:%M')}"
+
 
     return render(request, "shop/meal_of_day.html", {
         "meal": meal_of_day,
         "categories": categories,
         "variants": variants,
-        "sold_out": sold_out,
         "order_window_open": order_window_open,
         "service_day": service_day,
         "service_weekday": service_weekday,
@@ -112,4 +130,10 @@ def meal_list(request, category_slug=None):
         "now": now,
         "next_open_dt": next_open_dt,
         "next_cutoff_dt": next_cutoff_dt,
+        "sold_out": sold_out,
+        "is_closed": is_closed,
+        "is_out_of_stock": is_out_of_stock,
+        "is_inactive": is_inactive,
+        "status_kind": status_kind,
+        "status_msg": status_msg,
     })
