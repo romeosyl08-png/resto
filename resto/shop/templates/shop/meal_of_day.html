@@ -32,14 +32,27 @@
 
             <div class="d-flex justify-content-between align-items-start gap-2">
               <h1 class="h4 fw-bold mb-1">{{ meal.name }}</h1>
-
-              {% if sold_out %}
-                <span class="badge badge-danger fs-6">SOLD OUT</span>
+              
+              {% if status_kind == "inactive" %}
+                <span class="badge badge-danger fs-6">INDISPONIBLE</span>
+              {% elif status_kind == "soldout" %}
+                <span class="badge badge-danger fs-6">RUPTURE</span>
+              {% elif status_kind == "closed" %}
+                <span class="badge badge-primary fs-6">FERMÉ</span>
               {% else %}
                 {% with std=variants|first %}
                   {% if std %}<span class="price-pill">À PARTIR DE {{ std.price }} FCFA</span>{% endif %}
                 {% endwith %}
               {% endif %}
+
+
+              
+              
+              {% if status_msg %}
+                <div class="status-hint mt-2">{{ status_msg }}</div>
+              {% endif %}
+
+
             </div>
 
 
@@ -83,9 +96,14 @@
                 <button type="button" class="btn btn-outline-secondary btn-sm" onclick="incQty(this)" {% if sold_out %}disabled{% endif %}>+</button>
               </div>
 
-              <button type="submit" class="btn btn-dark btn-lg w-100" {% if sold_out %}disabled{% endif %}>
-                {% if sold_out %}Indisponible{% else %}Ajouter au panier{% endif %}
+              <button type="submit" class="btn btn-dark btn-lg w-100"
+                      {% if sold_out or is_closed %}disabled{% endif %}>
+                      {% if is_closed %}Commandes fermées
+                      {% elif sold_out %}Indisponible
+                      {% else %}Ajouter au panier
+                      {% endif %}
               </button>
+
             </form>
 
 
