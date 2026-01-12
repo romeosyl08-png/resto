@@ -11,6 +11,15 @@ from django.utils import timezone
 from marketing.services import PromoService, LoyaltyService
 from django.utils import timezone
 from shop.utils import is_order_window_open
+from django.db import transaction
+from django.db.models import F
+from django.contrib import messages
+from django.utils import timezone
+from shop.utils import is_order_window_open
+from shop.models import MealVariant
+
+
+
 
 @require_POST
 def cart_add(request, meal_id):
@@ -71,51 +80,45 @@ def checkout(request):
     if not list(cart):
         return redirect("shop:meal_list")
 
-     # ---- VERROU HORAIRE ----
     now = timezone.localtime()
     if not is_order_window_open(now.time()):
-        messages.error(
-            request,
-            "Les commandes sont actuellement fermées. Merci de revenir à l’heure d’ouverture."
-        )
+        messages.error(request, "Commandes fermées. Reviens à l’ouverture.")
         return redirect("orders:cart_detail")
-
-    # ---- VERROU STOCK (par ligne panier) ----
-    for item in cart:
-        variant = item["variant"]
-
-        if not variant.is_active or variant.stock < item["quantity"]:
-            messages.error(
-                request,
-                f"Le plat « {item['meal'].name} ({variant.code}) » n’est plus disponible."
-            )
-            return redirect("orders:cart_detail")
 
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
     if request.method == "POST":
         form = CheckoutForm(request.POST)
-        if form.is_valid():
-            profile.full_name = form.cleaned_data["customer_name"]
-            profile.phone = form.cleaned_data["phone"]
-            profile.address = form.cleaned_data["address"]
-            profile.save()
+        if not form.is_valid():
+            return render(request, "orders/checkout.html", {"cart": cart, "form": form})
 
-            # ---- RE-CHECK CRITIQUE AVANT COMMANDE ----
+        # MAJ profil
+        profile.full_name = form.cleaned_data["customer_name"]
+        profile.phone = form.cleaned_data["phone"]
+        profile.address = form.cleaned_data["address"]
+        profile.save()
+
+        promo_code = request.POST.get("promo_code", "").strip()
+
+        # -------- TRANSACTION ATOMIQUE --------
+        with transaction.atomic():
+            # 1) Re-check stock + lock lignes variants
+            locked = {}
             for item in cart:
-                variant = MealVariant.objects.select_for_update().get(
-                    meal=item["meal"],
+                v = MealVariant.objects.select_for_update().get(
+                    meal_id=item["meal"].id,
                     code=item["variant_code"],
-                    is_active=True
+                    is_active=True,
                 )
-
-                if variant.stock < item["quantity"]:
+                if v.stock < item["quantity"]:
                     messages.error(
                         request,
-                        f"Stock insuffisant pour « {item['meal'].name} ({variant.code}) »."
+                        f"Stock insuffisant pour « {item['meal'].name} ({v.code}) »."
                     )
                     return redirect("orders:cart_detail")
+                locked[(v.meal_id, v.code)] = v
 
+            # 2) Créer commande
             order = Order.objects.create(
                 user=request.user,
                 customer_name=profile.full_name,
@@ -126,44 +129,43 @@ def checkout(request):
                 total=Decimal("0.00"),
             )
 
-
+            # 3) Créer items (prix du variant)
             for item in cart:
                 OrderItem.objects.create(
                     order=order,
                     meal=item["meal"],
+                    variant_code=item["variant_code"],
                     quantity=item["quantity"],
-                    unit_price=item["unit_price"],   # <-- prix variante
-                    variant_code=item["variant_code"],  # <-- si tu ajoutes ce champ
+                    unit_price=item["unit_price"],
                 )
-            # ---- DÉCRÉMENT STOCK ----
+
+            # 4) Décrément stock (safe, via F())
             for item in cart:
-                variant = MealVariant.objects.select_for_update().get(
-                    meal=item["meal"],
+                MealVariant.objects.filter(
+                    meal_id=item["meal"].id,
                     code=item["variant_code"],
-                    is_active=True
-                )
-                variant.stock -= item["quantity"]
-                variant.save(update_fields=["stock"])
+                    is_active=True,
+                ).update(stock=F("stock") - item["quantity"])
 
-
+            # 5) Totaux
             order.recompute_subtotal()
             order.save(update_fields=["subtotal", "total"])
 
-            # 1) promo (si tu as un champ promo_code dans le form ou request.POST)
-            promo_code = request.POST.get("promo_code", "").strip()
+            # 6) Promo / fidélité (si ces services modifient DB, c’est mieux dans la transaction)
             if promo_code:
                 PromoService.apply_to_order(request.user, order, promo_code)
 
-            # 2) voucher (1 bon max)
             LoyaltyService.apply_best_voucher_to_order(request.user, order)
 
-            cart.clear()
-            return render(request, "orders/checkout_success.html", {"order": order})
+        # -------- FIN TRANSACTION --------
+
+        cart.clear()
+        return render(request, "orders/checkout_success.html", {"order": order})
+
     else:
         form = CheckoutForm(initial={
             "customer_name": profile.full_name,
             "phone": profile.phone,
             "address": profile.address,
         })
-
-    return render(request, "orders/checkout.html", {"cart": cart, "form": form})
+        return render(request, "orders/checkout.html", {"cart": cart, "form": form})
