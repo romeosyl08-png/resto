@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     
     'comptes',
     'shop', 
-    "orders",
+    "orders.apps.OrdersConfig",
     'staff',
     'rest_framework',
     'marketing',
