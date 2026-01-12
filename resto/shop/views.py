@@ -118,7 +118,7 @@ elif is_closed:
     status_msg = f"Commandes fermées — ouvre à {OPEN_TIME.strftime('%H:%M')}"
 
 
-      return render(request, "shop/meal_of_day.html", {
+return render(request, "shop/meal_of_day.html", {
         "meal": meal_of_day,
         "categories": categories,
         "variants": variants,
