@@ -73,7 +73,7 @@ def checkout(request):
 
      # ---- VERROU HORAIRE ----
     now = timezone.localtime()
-    if not _is_order_window_open(now.time()):
+    if not is_order_window_open(now.time()):
         messages.error(
             request,
             "Les commandes sont actuellement fermées. Merci de revenir à l’heure d’ouverture."
