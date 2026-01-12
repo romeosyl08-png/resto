@@ -70,6 +70,26 @@ def checkout(request):
     if not list(cart):
         return redirect("shop:meal_list")
 
+     # ---- VERROU HORAIRE ----
+    now = timezone.localtime()
+    if not _is_order_window_open(now.time()):
+        messages.error(
+            request,
+            "Les commandes sont actuellement fermées. Merci de revenir à l’heure d’ouverture."
+        )
+        return redirect("orders:cart_detail")
+
+    # ---- VERROU STOCK (par ligne panier) ----
+    for item in cart:
+        variant = item["variant"]
+
+        if not variant.is_active or variant.stock < item["quantity"]:
+            messages.error(
+                request,
+                f"Le plat « {item['meal'].name} ({variant.code}) » n’est plus disponible."
+            )
+            return redirect("orders:cart_detail")
+
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
     if request.method == "POST":
@@ -79,6 +99,21 @@ def checkout(request):
             profile.phone = form.cleaned_data["phone"]
             profile.address = form.cleaned_data["address"]
             profile.save()
+
+            # ---- RE-CHECK CRITIQUE AVANT COMMANDE ----
+            for item in cart:
+                variant = MealVariant.objects.select_for_update().get(
+                    meal=item["meal"],
+                    code=item["variant_code"],
+                    is_active=True
+                )
+
+                if variant.stock < item["quantity"]:
+                    messages.error(
+                        request,
+                        f"Stock insuffisant pour « {item['meal'].name} ({variant.code}) »."
+                    )
+                    return redirect("orders:cart_detail")
 
             order = Order.objects.create(
                 user=request.user,
@@ -99,6 +134,15 @@ def checkout(request):
                     unit_price=item["unit_price"],   # <-- prix variante
                     variant_code=item["variant_code"],  # <-- si tu ajoutes ce champ
                 )
+            # ---- DÉCRÉMENT STOCK ----
+            for item in cart:
+                variant = MealVariant.objects.select_for_update().get(
+                    meal=item["meal"],
+                    code=item["variant_code"],
+                    is_active=True
+                )
+                variant.stock -= item["quantity"]
+                variant.save(update_fields=["stock"])
 
 
             order.recompute_subtotal()
