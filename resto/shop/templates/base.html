@@ -20,18 +20,6 @@
   </head>
 
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
-  
-{% if messages %}
-  <div class="container py-3">
-    {% for message in messages %}
-      <div class="alert
-        {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}
-        mb-2">
-        {{ message }}
-      </div>
-    {% endfor %}
-  </div>
-{% endif %}
 
    <nav class="navbar navbar-expand-lg navbar-dark navbar-food sticky-top">
     <div class="container">
@@ -75,7 +63,17 @@
       </div>
     </div>
   </nav>
-
+{% if messages %}
+  <div class="container py-3">
+    {% for message in messages %}
+      <div class="alert
+        {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}
+        mb-2">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
   <main class="main-content">
     {% block content %}{% endblock %}
   </main>
