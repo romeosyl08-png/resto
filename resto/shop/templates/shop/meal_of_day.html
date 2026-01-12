@@ -8,7 +8,7 @@
     <div class="alert alert-warning">
       Aucun plat du jour n’est disponible.
     </div>
-  {% else %}
+  {% else %} 
 
   <!-- HERO + IMAGE -->
   <div class="page-surface p-3 p-md-4">
@@ -34,11 +34,14 @@
               <h1 class="h4 fw-bold mb-1">{{ meal.name }}</h1>
 
               {% if sold_out %}
-                <span class="badge bg-danger fs-6">SOLD OUT</span>
+                <span class="badge badge-danger fs-6">SOLD OUT</span>
               {% else %}
-                <span class="badge text-bg-primary fs-6">{{ meal.price }} FCFA</span>
+                {% with std=variants|first %}
+                  {% if std %}<span class="price-pill">À PARTIR DE {{ std.price }} FCFA</span>{% endif %}
+                {% endwith %}
               {% endif %}
             </div>
+
 
             <div class="text-muted small mb-3">
               {{ meal.category.name }} · Fermeture commandes à {{ cutoff_time|time:"H:i" }}
@@ -54,12 +57,29 @@
             <form method="post" action="{% url 'orders:cart_add' meal.id %}">
               {% csrf_token %}
 
+            <div class="mb-3">
+
+              <label class="form-label form-label-soft">Choisir le tarif</label>
+
+              <div class="variant-grid">
+                {% for v in variants %}
+                  <label class="variant-pill {% if v.stock <= 0 %}is-disabled{% endif %}">
+                    <input type="radio" name="variant" value="{{ v.code }}"
+                          {% if forloop.first %}checked{% endif %}
+                          {% if v.stock <= 0 %}disabled{% endif %}>
+                    <span class="variant-name">{{ v.label|default:v.get_code_display }}</span>
+                    <span class="variant-price">{{ v.price }} FCFA</span>
+                  </label>
+                {% endfor %}
+              </div>
+            </div>
+
+
+
               <div class="d-flex align-items-center gap-2 mb-3">
                 <button type="button" class="btn btn-outline-secondary btn-sm" onclick="decQty(this)" {% if sold_out %}disabled{% endif %}>−</button>
-
                 <input type="hidden" name="quantity" value="1">
                 <span class="fw-semibold">1</span>
-
                 <button type="button" class="btn btn-outline-secondary btn-sm" onclick="incQty(this)" {% if sold_out %}disabled{% endif %}>+</button>
               </div>
 
@@ -68,12 +88,15 @@
               </button>
             </form>
 
+
             <!-- Détails repliables (hybride du detail) -->
             <hr class="my-4">
 
             <h2 class="h6 fw-bold mb-2">Détails</h2>
             <ul class="list-unstyled small mb-0">
-            <li><strong>Prix :</strong> {{ meal.price }} FCFA</li>
+            {% with std=variants|first %}
+              {% if std %}<li><strong>Prix :</strong> à partir de {{ std.price }} FCFA</li>{% endif %}
+            {% endwith %}
             <li><strong>Catégorie :</strong> {{ meal.category.name }}</li>
             <li><strong>Fermeture commandes :</strong> {{ cutoff_time|time:"H:i" }}</li>
             </ul>

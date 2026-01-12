@@ -11,7 +11,7 @@ class Order(models.Model):
         ("canceled", "Annulée"),
         ("delivered", "Livrée"),
     )
-
+ 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -44,11 +44,13 @@ class Order(models.Model):
         return f"Commande #{self.id} - {self.customer_name}"
 
 
+
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     meal = models.ForeignKey(Meal, on_delete=models.PROTECT)
+    variant_code = models.CharField(max_length=20, default="standard")  # <-- AJOUT
     quantity = models.PositiveIntegerField(default=1)
-    unit_price = models.DecimalField(max_digits=8, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)  # <-- un peu plus large
 
     def subtotal(self):
         return self.quantity * self.unit_price

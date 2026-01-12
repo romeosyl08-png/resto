@@ -1,6 +1,6 @@
-# staff/forms.py
 from django import forms
-from shop.models import Meal, WEEKDAY_CHOICES
+from django.forms import inlineformset_factory
+from shop.models import Meal, MealVariant, WEEKDAY_CHOICES
 
 class MealForm(forms.ModelForm):
     weekdays = forms.MultipleChoiceField(
@@ -12,7 +12,8 @@ class MealForm(forms.ModelForm):
 
     class Meta:
         model = Meal
-        fields = ["category","name","slug","description","price","stock","is_active","image"]
+        fields = ["category", "name", "slug", "description", "stock", "is_active", "image"]
+        # si tu gardes stock global; sinon retire "stock"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -26,3 +27,27 @@ class MealForm(forms.ModelForm):
             obj.save()
             self.save_m2m()
         return obj
+
+
+class MealVariantForm(forms.ModelForm):
+    class Meta:
+        model = MealVariant
+        fields = ["code", "label", "price", "stock", "is_active"]
+        widgets = {
+            "code": forms.Select(attrs={"class": "form-select"}),
+            "label": forms.TextInput(attrs={"class": "form-control"}),
+            "price": forms.NumberInput(attrs={"class": "form-control", "min": 0}),
+            "stock": forms.NumberInput(attrs={"class": "form-control", "min": 0}),
+            "is_active": forms.CheckboxInput(),
+        }
+
+
+MealVariantFormSet = inlineformset_factory(
+    parent_model=Meal,
+    model=MealVariant,
+    form=MealVariantForm,
+    extra=0,
+    can_delete=False,
+    min_num=3,
+    validate_min=True,
+)

@@ -26,20 +26,33 @@
                 <div class="card border-0 shadow-sm">
                   <div class="card-body d-flex gap-3 align-items-start">
                     <div class="flex-grow-1">
-                      <div class="fw-semibold">{{ item.meal.name }}</div>
-                      <div class="text-muted small">{{ item.price }} FCFA × {{ item.quantity }}</div>
-                      <div class="fw-bold mt-1">{{ item.total_price }} FCFA</div>
+
+                      <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div>
+                          <div class="fw-bold">{{ item.meal.name }}</div>
+                          <div class="text-muted small">
+                            Tarif : {{ item.variant.label|default:item.variant.get_code_display }}
+                          </div>
+                        </div>
+                        <div class="text-end">
+                          <div class="fw-bold">{{ item.total_price }} FCFA</div>
+                          <div class="text-muted small">{{ item.unit_price }} FCFA × {{ item.quantity }}</div>
+                        </div>
+                      </div>
 
                       <div class="d-flex gap-2 mt-3">
                         <a class="btn btn-sm btn-outline-secondary"
                            href="{% url 'shop:meal_detail' item.meal.slug %}">
                           Détails
                         </a>
+
+                        <!-- IMPORTANT: remove doit inclure la variante -->
                         <a class="btn btn-sm btn-outline-danger"
-                           href="{% url 'orders:cart_remove' item.meal.id %}">
+                           href="{% url 'orders:cart_remove' item.meal.id item.variant_code %}">
                           Retirer
                         </a>
                       </div>
+
                     </div>
                   </div>
                 </div>
@@ -52,15 +65,9 @@
             <form method="post" action="{% url 'orders:cart_apply_promo' %}" class="d-flex gap-2">
               {% csrf_token %}
               <input type="text" name="promo_code" class="form-control" placeholder="Code promo"
-                    value="{{ cart.promo_code|default_if_none:'' }}">
+                     value="{{ cart.promo_code|default_if_none:'' }}">
               <button class="btn btn-dark">Appliquer</button>
             </form>
-
-            {% if promo_msg %}
-              <div class="alert {% if promo_ok %}alert-success{% else %}alert-danger{% endif %} mt-2">
-                {{ promo_msg }}
-              </div>
-            {% endif %}
 
             {% if cart.promo_code %}
               <form method="post" action="{% url 'orders:cart_remove_promo' %}" class="mt-2">
@@ -72,21 +79,22 @@
             <hr class="my-3">
 
             <!-- Totaux -->
-            <li class="list-group-item d-flex justify-content-between">
-              <span>Sous-total</span>
-              <span>{{ cart.get_subtotal_price }} FCFA</span>
-            </li>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between">
+                <span>Sous-total</span>
+                <span>{{ cart.get_subtotal_price }} FCFA</span>
+              </li>
 
-            <li class="list-group-item d-flex justify-content-between">
-              <span>Remise {% if cart.promo_code %}({{ cart.promo_code }}){% endif %}</span>
-              <span>- {{ cart.get_discount_amount }} FCFA</span>
-            </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span>Remise {% if cart.promo_code %}({{ cart.promo_code }}){% endif %}</span>
+                <span>- {{ cart.get_discount_amount }} FCFA</span>
+              </li>
 
-            <li class="list-group-item d-flex justify-content-between fw-bold">
-              <span>Total</span>
-              <span>{{ cart.get_total_after_discount }} FCFA</span>
-            </li>
-
+              <li class="list-group-item d-flex justify-content-between fw-bold">
+                <span>Total</span>
+                <span>{{ cart.get_total_after_discount }} FCFA</span>
+              </li>
+            </ul>
 
           {% else %}
             <div class="alert alert-secondary">Ton panier est vide.</div>
@@ -95,7 +103,7 @@
       </div>
     </div>
 
-    <!-- Colonne droite : résumé cohérent -->
+    <!-- Colonne droite : résumé -->
     <div class="col-lg-4">
       <div class="card border-0 shadow-sm">
         <div class="card-body">
@@ -116,13 +124,11 @@
             <span class="fw-bold">{{ cart.get_total_after_discount }} FCFA</span>
           </div>
 
-          <a class="btn btn-dark w-100 mt-2"
-             href="{% url 'orders:checkout' %}">
+          <a class="btn btn-dark w-100 mt-2" href="{% url 'orders:checkout' %}">
             Passer commande
           </a>
 
-          <a class="btn btn-outline-secondary w-100 mt-2"
-             href="{% url 'shop:meal_list' %}">
+          <a class="btn btn-outline-secondary w-100 mt-2" href="{% url 'shop:meal_list' %}">
             Continuer mes achats
           </a>
         </div>
@@ -130,24 +136,5 @@
     </div>
 
   </div>
-<form method="post" action="{% url 'orders:cart_apply_promo' %}" class="d-flex gap-2">
-  {% csrf_token %}
-  <input type="text" name="promo_code" class="form-control" placeholder="Code promo"
-         value="{{ cart.promo_code|default_if_none:'' }}">
-  <button class="btn btn-dark">Appliquer</button>
-</form>
-
-{% if promo_msg %}
-  <div class="alert {% if promo_ok %}alert-success{% else %}alert-danger{% endif %} mt-2">
-    {{ promo_msg }}
-  </div>
-{% endif %}
-
-{% if cart.promo_code %}
-  <form method="post" action="{% url 'orders:cart_remove_promo' %}" class="mt-2">
-    {% csrf_token %}
-    <button class="btn btn-outline-secondary btn-sm">Retirer le code</button>
-  </form>
-{% endif %}
 </div>
 {% endblock %}

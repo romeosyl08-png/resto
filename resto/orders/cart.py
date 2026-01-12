@@ -1,7 +1,6 @@
 from decimal import Decimal, ROUND_HALF_UP
 from django.utils import timezone
-from shop.models import Meal
-
+from shop.models import Meal, MealVariant
 from marketing.services import PromoService
 
 CART_SESSION_ID = "cart"
@@ -18,48 +17,75 @@ class Cart:
             cart = self.session[CART_SESSION_ID] = {}
         self.cart = cart
 
-    def add(self, meal_id, quantity=1):
-        meal_id = str(meal_id)
-        meal = Meal.objects.get(id=int(meal_id))
+    def _key(self, meal_id: int, variant_code: str) -> str:
+        return f"{meal_id}:{variant_code}"
 
-        if meal_id not in self.cart:
-            self.cart[meal_id] = {"quantity": 0}
+    def add(self, meal_id, variant_code="standard", quantity=1):
+        meal_id = int(meal_id)
+        variant_code = (variant_code or "standard").strip()
 
-        current = int(self.cart[meal_id]["quantity"])
+        meal = Meal.objects.get(id=meal_id)
+        variant = MealVariant.objects.get(meal_id=meal_id, code=variant_code, is_active=True)
+
+        key = self._key(meal_id, variant_code)
+
+        if key not in self.cart:
+            self.cart[key] = {
+                "meal_id": meal_id,
+                "variant": variant_code,
+                "quantity": 0,
+                "unit_price": int(variant.price),  # FCFA int
+            }
+
+        current = int(self.cart[key]["quantity"])
         wanted = current + int(quantity)
 
-        limit_stock = int(meal.stock)
+        limit_stock = int(variant.stock)
         limit_per_order = int(meal.max_per_order or self.MAX_QTY)
         hard_limit = min(self.MAX_QTY, limit_per_order, limit_stock)
 
-        self.cart[meal_id]["quantity"] = max(1, min(wanted, hard_limit))
+        self.cart[key]["quantity"] = max(1, min(wanted, hard_limit))
+        # keep price synced (au cas où admin change)
+        self.cart[key]["unit_price"] = int(variant.price)
+
         self.save()
 
-    def set(self, meal_id, quantity):
-        meal_id = str(meal_id)
+    def set(self, meal_id, variant_code="standard", quantity=1):
+        meal_id = int(meal_id)
+        variant_code = (variant_code or "standard").strip()
         qty = int(quantity)
 
+        key = self._key(meal_id, variant_code)
+
         if qty <= 0:
-            if meal_id in self.cart:
-                del self.cart[meal_id]
-            self.save()
+            if key in self.cart:
+                del self.cart[key]
+                self.save()
             return
 
-        meal = Meal.objects.get(id=int(meal_id))
-        limit_stock = int(meal.stock)
+        meal = Meal.objects.get(id=meal_id)
+        variant = MealVariant.objects.get(meal_id=meal_id, code=variant_code, is_active=True)
+
+        if key not in self.cart:
+            self.cart[key] = {
+                "meal_id": meal_id,
+                "variant": variant_code,
+                "quantity": 0,
+                "unit_price": int(variant.price),
+            }
+
+        limit_stock = int(variant.stock)
         limit_per_order = int(meal.max_per_order or self.MAX_QTY)
         hard_limit = min(self.MAX_QTY, limit_per_order, limit_stock)
 
-        if meal_id not in self.cart:
-            self.cart[meal_id] = {"quantity": 0}
-
-        self.cart[meal_id]["quantity"] = max(1, min(qty, hard_limit))
+        self.cart[key]["quantity"] = max(1, min(qty, hard_limit))
+        self.cart[key]["unit_price"] = int(variant.price)
         self.save()
 
-    def remove(self, meal_id):
-        meal_id = str(meal_id)
-        if meal_id in self.cart:
-            del self.cart[meal_id]
+    def remove(self, meal_id, variant_code="standard"):
+        key = self._key(int(meal_id), (variant_code or "standard").strip())
+        if key in self.cart:
+            del self.cart[key]
             self.save()
 
     def clear(self):
@@ -71,23 +97,82 @@ class Cart:
         self.session.modified = True
 
     def __iter__(self):
-        meal_ids = self.cart.keys()
-        meals = Meal.objects.filter(id__in=meal_ids)
-        meal_map = {str(m.id): m for m in meals}
+        keys = list(self.cart.keys())
 
-        for meal_id, item in self.cart.items():
-            meal = meal_map.get(meal_id)
-            if meal:
-                quantity = int(item["quantity"])
-                yield {
-                    "meal": meal,
-                    "quantity": quantity,
-                    "price": meal.price,
-                    "total_price": meal.price * quantity,
+        # --- AUTO-UPGRADE anciens paniers ---
+        upgraded = False
+        for k in keys:
+            item = self.cart.get(k) or {}
+            # ancien format: {"quantity": X} avec key = meal_id
+            if "meal_id" not in item:
+                try:
+                    meal_id = int(k)  # k était "12"
+                except Exception:
+                    continue
+                variant_code = "standard"
+                # initialise au nouveau format
+                self.cart[f"{meal_id}:{variant_code}"] = {
+                    "meal_id": meal_id,
+                    "variant": variant_code,
+                    "quantity": int(item.get("quantity", 1) or 1),
+                    "unit_price": 0,  # sera recalculé via MealVariant
                 }
+                # supprime l'ancien
+                del self.cart[k]
+                upgraded = True
+
+        if upgraded:
+            self.save()
+
+        # recalc keys après upgrade
+        keys = list(self.cart.keys())
+        if not keys:
+            return
+
+        meal_ids = {int(self.cart[k]["meal_id"]) for k in keys}
+        meals = Meal.objects.filter(id__in=meal_ids)
+        meal_map = {m.id: m for m in meals}
+
+        variant_pairs = {(int(self.cart[k]["meal_id"]), self.cart[k]["variant"]) for k in keys}
+
+        variants = MealVariant.objects.filter(
+            meal_id__in=[p[0] for p in variant_pairs],
+            code__in=[p[1] for p in variant_pairs],
+            is_active=True
+        )
+        var_map = {(v.meal_id, v.code): v for v in variants}
+
+        for k in keys:
+            item = self.cart.get(k) or {}
+            meal_id = int(item["meal_id"])
+            variant_code = item["variant"]
+
+            meal = meal_map.get(meal_id)
+            variant = var_map.get((meal_id, variant_code))
+            if not meal or not variant:
+                continue
+
+            qty = int(item.get("quantity", 1))
+            unit_price = Decimal(str(int(variant.price)))
+            total_price = unit_price * qty
+
+            # sync price en session
+            item["unit_price"] = int(variant.price)
+            self.cart[k] = item
+
+            yield {
+                "key": k,
+                "meal": meal,
+                "variant": variant,
+                "variant_code": variant_code,
+                "quantity": qty,
+                "unit_price": unit_price,
+                "total_price": total_price,
+            }
+
 
     def get_subtotal_price(self):
-        total = Decimal("0.00")
+        total = Decimal("0")
         for item in self:
             total += item["total_price"]
         return total
@@ -104,13 +189,13 @@ class Cart:
         try:
             return Decimal(str(promo.get("discount", "0")))
         except Exception:
-            return Decimal("0.00")
+            return Decimal("0")
 
     def get_total_after_discount(self):
         subtotal = self.get_subtotal_price()
         discount = self.get_discount_amount()
         if discount < 0:
-            discount = Decimal("0.00")
+            discount = Decimal("0")
         if discount > subtotal:
             discount = subtotal
         return (subtotal - discount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -121,16 +206,11 @@ class Cart:
             self.save()
 
     def apply_promo(self, user, promo_code: str):
-        """
-        Applique une promo au panier (stockée en session).
-        Utilise marketing.services.PromoService pour valider et calculer.
-        """
         subtotal = self.get_subtotal_price()
         res = PromoService.estimate(user, subtotal, promo_code)
 
         if not res.ok:
             self.remove_promo()
-            # message user-friendly
             mapping = {
                 "EMPTY_CODE": "Code vide.",
                 "INVALID_OR_EXPIRED": "Code invalide ou expiré.",
@@ -150,3 +230,6 @@ class Cart:
         }
         self.save()
         return True, "Code appliqué."
+
+    def __len__(self):
+        return sum(int(item.get("quantity", 0)) for item in self.cart.values())

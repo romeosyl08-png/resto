@@ -6,20 +6,29 @@ from .forms import CheckoutForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from decimal import Decimal
+from shop.models import MealVariant
 
 from marketing.services import PromoService, LoyaltyService
+
 
 @require_POST
 def cart_add(request, meal_id):
     cart = Cart(request)
-    cart.add(meal_id=meal_id, quantity=1)
-    return redirect('orders:cart_detail')
+    variant_code = request.POST.get("variant", "standard")
+    qty = int(request.POST.get("quantity", "1") or "1")
+
+    # validation + stock via Cart.add (qui check variant)
+    cart.add(meal_id=meal_id, variant_code=variant_code, quantity=qty)
+    return redirect("orders:cart_detail")
 
 
-def cart_remove(request, meal_id):
+
+def cart_remove(request, meal_id, variant_code):
     cart = Cart(request)
-    cart.remove(meal_id)
-    return redirect('orders:cart_detail')
+    cart.remove(meal_id, variant_code)
+    return redirect("orders:cart_detail")
+
+
 
 
 @require_POST
@@ -81,13 +90,16 @@ def checkout(request):
                 total=Decimal("0.00"),
             )
 
+
             for item in cart:
                 OrderItem.objects.create(
                     order=order,
                     meal=item["meal"],
                     quantity=item["quantity"],
-                    unit_price=item["meal"].price,
+                    unit_price=item["unit_price"],   # <-- prix variante
+                    variant_code=item["variant_code"],  # <-- si tu ajoutes ce champ
                 )
+
 
             order.recompute_subtotal()
             order.save(update_fields=["subtotal", "total"])

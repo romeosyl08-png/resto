@@ -36,8 +36,6 @@ def profile(request):
     else:
         form = ProfileForm(instance=profile_obj)
 
-    # --- Fidélité ---
-
     loyalty, _ = LoyaltyAccount.objects.get_or_create(user=request.user)
 
     free_vouchers = FreeItemVoucher.objects.filter(
@@ -45,35 +43,31 @@ def profile(request):
         status=FreeItemVoucher.Status.AVAILABLE
     ).count()
 
-
-    # --- Filtre statut commandes ---
     status = request.GET.get("status", "all")
     qs = Order.objects.filter(user=request.user).order_by("-created_at")
     if status != "all":
         qs = qs.filter(status=status)
 
-    # Stats par statut (pour afficher des compteurs)
     status_counts = (
         Order.objects.filter(user=request.user)
         .values("status")
         .annotate(n=Count("id"))
     )
     counts_map = {x["status"]: x["n"] for x in status_counts}
-    
-    counts = {
-    "pending": counts_map.get("pending", 0),
-    "confirmed": counts_map.get("confirmed", 0),
-    "delivered": counts_map.get("delivered", 0),
-    "canceled": counts_map.get("canceled", 0),
-}
 
+    counts = {
+        "pending": counts_map.get("pending", 0),
+        "confirmed": counts_map.get("confirmed", 0),
+        "delivered": counts_map.get("delivered", 0),
+        "canceled": counts_map.get("canceled", 0),
+    }
 
     return render(request, "registration/profile.html", {
         "form": form,
+        "profile": profile_obj,   # <-- AJOUT
         "orders": qs,
         "status": status,
         "counts": counts,
-
-        "loyalty_points": loyalty.stamps, # points restants (0..7)
-        "free_vouchers": free_vouchers,      # bons gratuits dispo
+        "loyalty_points": loyalty.stamps,
+        "free_vouchers": free_vouchers,
     })

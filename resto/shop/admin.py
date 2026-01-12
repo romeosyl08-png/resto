@@ -1,19 +1,28 @@
 from django.contrib import admin
-from .models import Category, Meal
+from .models import Category, Meal, MealVariant
 
 
-@admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'slug')
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ('name',)
 
 
+
+
+
+class MealVariantInline(admin.TabularInline):
+    model = MealVariant
+    extra = 0
+
 @admin.register(Meal)
 class MealAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'price', 'is_active')
-    list_filter = ('category', 'is_active')
-    search_fields = ('name', 'description')
-    prepopulated_fields = {'slug': ('name',)}
+    prepopulated_fields = {"slug": ("name",)}
+    inlines = [MealVariantInline]
+    list_display = ("name", "category", "is_active", "stock")
+
+admin.site.register(Category)
+admin.site.register(MealVariant)
+
 
 

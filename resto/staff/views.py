@@ -11,7 +11,6 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from .forms import MealForm
 
-from orders.loyalty import apply_loyalty_on_delivery  # import
 
 from marketing.models import LoyaltyAccount, FreeItemVoucher
 

@@ -75,15 +75,16 @@
       </a>
     </div>
 
-    <div class="card border-0 shadow-sm">
+    <div class="card table-card">
       <div class="table-responsive">
-        <table class="table table-sm align-middle mb-0">
+        <table class="table table-sm align-middle mb-0 table-darklike">
           <thead>
             <tr>
               <th>ID</th>
               <th>Date</th>
               <th>Total</th>
               <th>Statut</th>
+              <th>Détails</th>
             </tr>
           </thead>
           <tbody>
@@ -93,21 +94,35 @@
                 <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
                 <td>{{ order.total }} FCFA</td>
                 <td>{{ order.get_status_display }}</td>
+                <td>
+                  <ul class="mb-0 small">
+                    {% for item in order.items.all %}
+                      <li>
+                        {{ item.meal.name }}
+                        — {{ item.variant_code|upper }}
+                        × {{ item.quantity }}
+                        ({{ item.unit_price }} FCFA)
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </td>
               </tr>
             {% empty %}
-              <tr><td colspan="4" class="text-muted">Aucune commande pour le moment.</td></tr>
+              <tr>
+                <td colspan="5" class="text-muted">Aucune commande pour le moment.</td>
+              </tr>
             {% endfor %}
           </tbody>
+
         </table>
       </div>
     </div>
-
+      <form method="post" action="{% url 'comptes:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-secondary w-100 mt-3">
+          Déconnexion
+        </button>
+      </form>
   </div>
-      <form method="post" action="{% url 'comptes:logout' %}" class="d-inline">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-link nav-link p-0 align-baseline">
-        Déconnexion
-      </button>
-    </form>
-</div>
+
 {% endblock %}
