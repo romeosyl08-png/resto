@@ -9,7 +9,8 @@ from decimal import Decimal
 from shop.models import MealVariant
 from django.utils import timezone
 from marketing.services import PromoService, LoyaltyService
-
+from django.utils import timezone
+from shop.utils import is_order_window_open
 
 @require_POST
 def cart_add(request, meal_id):
