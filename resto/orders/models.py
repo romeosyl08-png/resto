@@ -40,6 +40,9 @@ class Order(models.Model):
         self.subtotal = sub
         self.total = max(Decimal("0.00"), sub - (self.discount_total or Decimal("0.00")))
 
+    def is_editable(self):
+        return self.status not in ("delivered", "canceled")
+
     def __str__(self):
         return f"Commande #{self.id} - {self.customer_name}"
 
