@@ -8,8 +8,7 @@ from django.shortcuts import render
 from django.utils import timezone
 
 from .models import Meal, Category, MealVariant
-#from .views_helpers import _is_order_window_open, _service_date   adapte si besoin
-# ou garde tes fonctions dans le même fichier
+from .utils import OPEN_TIME, CUTOFF_TIME, is_order_window_open, service_date
 
 # OPEN_TIME et CUTOFF_TIME doivent exister dans ce fichier
 # OPEN_TIME = time(18, 0)
@@ -40,9 +39,9 @@ def meal_list(request, category_slug=None):
     # TOUJOURS défini
     categories = Category.objects.all()
 
-    order_window_open = _is_order_window_open(now.time())
+    order_window_open = is_order_window_open(now.time())
 
-    service_day = _service_date(now)
+    service_day = service_date(now)
     service_weekday = service_day.weekday()
 
     # base queryset (si tu veux utiliser category_slug un jour)
