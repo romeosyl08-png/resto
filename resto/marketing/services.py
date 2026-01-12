@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_UP
 from django.db import transaction
 from django.utils import timezone
+from datetime import timedelta
 
 from .models import Promotion, PromotionRedemption, LoyaltyAccount, FreeItemVoucher
 from orders.models import Order, OrderItem
@@ -131,7 +132,8 @@ class LoyaltyService:
             FreeItemVoucher.objects.create(
                 user=order.user,
                 max_item_value=LoyaltyService.VOUCHER_MAX_VALUE,
-                expires_at=timezone.now() + timezone.timedelta(days=LoyaltyService.VOUCHER_DAYS_VALID),
+                expires_at=timezone.now() + timedelta(days=LoyaltyService.VOUCHER_DAYS_VALID)
+
             )
 
     @staticmethod
