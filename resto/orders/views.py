@@ -159,8 +159,10 @@ def checkout(request):
 
         # -------- FIN TRANSACTION --------
 
-        cart.clear()
-        return render(request, "orders/checkout_success.html", {"order": order})
+
+cart_total = cart.get_total_after_discount()
+cart.clear()
+     return render(request, "orders/checkout_success.html", {"order": order, "cart_total": cart_total})
 
     else:
         form = CheckoutForm(initial={
