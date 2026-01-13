@@ -39,6 +39,15 @@
           🎁 Tu as {{ free_vouchers }} plat(s) gratuit(s) disponible(s).
         </div>
       {% endif %}
+      <div class="text-muted small mt-2">
+        Règle : 8 plats achetés → 1 bon “plat gratuit”.
+        Le bon s’applique sur le plat le moins cher de la commande (plafonné).
+      </div>
+      {% if next_free_in > 0 %}
+        <div class="text-muted small mt-1">
+          Prochain plat gratuit dans {{ next_free_in }} plat(s).
+        </div>
+      {% endif %}
     </div>
   </div>
 
@@ -82,6 +91,7 @@
             <tr>
               <th>ID</th>
               <th>Date</th>
+              <th>Avantage</th>
               <th>Total</th>
               <th>Statut</th>
               <th>Détails</th>
@@ -92,6 +102,16 @@
               <tr>
                 <td>{{ order.id }}</td>
                 <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                <td>
+                  {% if order.used_vouchers.all|length > 0 %}
+                    <span class="badge badge-primary">🎁 Plat gratuit</span>
+                  {% elif order.promo_code %}
+                    <span class="badge badge-primary">🏷️ Promo</span>
+                  {% else %}
+                    <span class="text-muted small">—</span>
+                  {% endif %}
+                </td>
+
                 <td>{{ order.total }} FCFA</td>
                 <td>{{ order.get_status_display }}</td>
                 <td>
@@ -109,7 +129,7 @@
               </tr>
             {% empty %}
               <tr>
-                <td colspan="5" class="text-muted">Aucune commande pour le moment.</td>
+                <td colspan="6" class="text-muted">Aucune commande pour le moment.</td>
               </tr>
             {% endfor %}
           </tbody>

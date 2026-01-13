@@ -233,3 +233,59 @@ class Cart:
 
     def __len__(self):
         return sum(int(item.get("quantity", 0)) for item in self.cart.values())
+
+
+    def purge_unavailable(self, *, order_window_open: bool) -> dict:
+        """
+        Supprime du panier tout ce qui n'est plus commandable.
+        Si la fenêtre de commande est fermée, on vide tout.
+        Retourne un résumé.
+        """
+        removed = 0
+        reasons = set()
+
+        # Si tu veux VRAIMENT vider le panier quand fermé :
+        if not order_window_open:
+            removed = len(self.cart)
+            self.clear()
+            reasons.add("closed")
+            return {"removed": removed, "reasons": reasons}
+
+        # Sinon: on supprime seulement les lignes invalides
+        keys = list(self.cart.keys())
+        for k in keys:
+            item = self.cart.get(k) or {}
+
+            meal_id = item.get("meal_id")
+            variant_code = item.get("variant")
+
+            # ancien format / item incomplet => on supprime
+            if not meal_id or not variant_code:
+                del self.cart[k]
+                removed += 1
+                reasons.add("corrupt")
+                continue
+
+            try:
+                variant = MealVariant.objects.get(
+                    meal_id=int(meal_id),
+                    code=str(variant_code),
+                    is_active=True
+                )
+            except MealVariant.DoesNotExist:
+                del self.cart[k]
+                removed += 1
+                reasons.add("inactive")
+                continue
+
+            qty = int(item.get("quantity", 1))
+            if variant.stock < qty:
+                del self.cart[k]
+                removed += 1
+                reasons.add("stock")
+
+        if removed:
+            self.save()
+
+        return {"removed": removed, "reasons": reasons}
+

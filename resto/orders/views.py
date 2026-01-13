@@ -9,16 +9,10 @@ from decimal import Decimal
 from shop.models import MealVariant
 from django.utils import timezone
 from marketing.services import PromoService, LoyaltyService
-from django.utils import timezone
 from shop.utils import is_order_window_open
 from django.db import transaction
 from django.db.models import F
 from django.contrib import messages
-from django.utils import timezone
-from shop.utils import is_order_window_open
-from shop.models import MealVariant
-
-
 
 
 @require_POST
@@ -60,10 +54,26 @@ def cart_remove_promo(request):
     request.session["promo_ok"] = True
     return redirect("orders:cart_detail")
 
+
 def cart_detail(request):
     cart = Cart(request)
+
+    now = timezone.localtime()
+    order_window_open = is_order_window_open(now.time())
+
+    res = cart.purge_unavailable(order_window_open=order_window_open)
+
+    if res["removed"] > 0:
+        if "closed" in res["reasons"]:
+            messages.warning(request, "Commandes fermées : panier vidé automatiquement.")
+        elif "stock" in res["reasons"] or "inactive" in res["reasons"]:
+            messages.warning(request, "Certains articles n’étaient plus disponibles : ils ont été retirés du panier.")
+        else:
+            messages.warning(request, "Panier nettoyé.")
+
     promo_msg = request.session.pop("promo_msg", None)
     promo_ok = request.session.pop("promo_ok", None)
+
     return render(request, "orders/cart_detail.html", {
         "cart": cart,
         "promo_msg": promo_msg,
@@ -77,6 +87,13 @@ def cart_detail(request):
 @login_required(login_url="comptes:login")
 def checkout(request):
     cart = Cart(request)
+    now = timezone.localtime()
+    order_window_open = is_order_window_open(now.time())
+
+    res = cart.purge_unavailable(order_window_open=order_window_open)
+    if res["removed"] > 0:
+        return redirect("orders:cart_detail")
+
     if not list(cart):
         return redirect("shop:meal_list")
 
@@ -156,13 +173,14 @@ def checkout(request):
                 PromoService.apply_to_order(request.user, order, promo_code)
 
             LoyaltyService.apply_best_voucher_to_order(request.user, order)
+            print("voucher applied? discount_total=", order.discount_total, "total=", order.total)
+            print("items:", list(order.items.values_list("meal_id","variant_code","unit_price","quantity")))
+
 
         # -------- FIN TRANSACTION --------
-
-
-            cart_total = cart.get_total_after_discount()
-            cart.clear()
-            return render(request, "orders/checkout_success.html", {"order": order, "cart_total": cart_total})
+            
+            used_voucher = FreeItemVoucher.objects.filter(used_order=order).exists()
+            return render(request, "orders/checkout_success.html", {"order": order, "used_voucher": used_voucher})
 
     else:
         form = CheckoutForm(initial={

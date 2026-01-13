@@ -44,7 +44,10 @@ def profile(request):
     ).count()
 
     status = request.GET.get("status", "all")
-    qs = Order.objects.filter(user=request.user).order_by("-created_at")
+    qs = (Order.objects
+      .filter(user=request.user)
+      .prefetch_related("items", "used_vouchers")  # used_vouchers = related_name dans FreeItemVoucher.used_order
+      .order_by("-created_at"))
     if status != "all":
         qs = qs.filter(status=status)
 
@@ -62,6 +65,8 @@ def profile(request):
         "canceled": counts_map.get("canceled", 0),
     }
 
+    next_free_in = (8 - (loyalty.stamps % 8)) if (loyalty.stamps % 8) != 0 else 0
+
     return render(request, "registration/profile.html", {
         "form": form,
         "profile": profile_obj,   # <-- AJOUT
@@ -70,4 +75,5 @@ def profile(request):
         "counts": counts,
         "loyalty_points": loyalty.stamps,
         "free_vouchers": free_vouchers,
+        "next_free_in" : next_free_in,
     })

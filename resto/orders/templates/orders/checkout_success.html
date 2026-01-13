@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="d-flex justify-content-center mt-5">
-  <div class="card shadow-lg border-0" style="max-width: 480px;">
+  <div class="card shadow-lg border-0" style="max-width: 520px;">
     <div class="card-body text-center p-4">
 
       <div class="mb-3">
@@ -13,21 +13,48 @@
         </svg>
       </div>
 
-      <h1 class="h4 mb-3">Merci pour votre commande</h1>
+      <h1 class="h4 mb-2">Merci pour votre commande</h1>
 
-      <p class="text-muted mb-1">
+      <p class="text-muted mb-3">
         Votre commande <strong>#{{ order.id }}</strong> a été enregistrée avec succès.
       </p>
 
-      <p class="fw-bold fs-5 mb-4">
-        Total : {{ cart_total }} FCFA
-</p>
+      <!-- Récap réel (source de vérité = Order) -->
+      <div class="text-start mx-auto" style="max-width: 420px;">
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Sous-total</span>
+          <span class="fw-semibold">{{ order.subtotal }} FCFA</span>
+        </div>
 
-      <a href="{% url 'shop:meal_list' %}" class="btn btn-primary btn-lg w-100">
+        {% if order.discount_total and order.discount_total > 0 %}
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">
+              Remise
+              {% if order.promo_code %}({{ order.promo_code }}){% endif %}
+            </span>
+            <span class="fw-semibold">- {{ order.discount_total }} FCFA</span>
+          </div>
+        {% endif %}
+
+        <hr class="my-3">
+
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="fw-bold fs-6">Total</span>
+          <span class="fw-bold fs-5">{{ order.total }} FCFA</span>
+        </div>
+
+        {% if used_voucher %}
+          <div class="alert alert-success py-2 mt-3 mb-0">
+            🎁 Plat gratuit appliqué.
+          </div>
+        {% endif %}
+      </div>
+
+      <a href="{% url 'shop:meal_list' %}" class="btn btn-primary btn-lg w-100 mt-4">
         Retour au menu
       </a>
 
-      <p class="text-muted small mt-3">
+      <p class="text-muted small mt-3 mb-0">
         Vous recevrez votre repas sous peu. Merci pour votre confiance.
       </p>
     </div>

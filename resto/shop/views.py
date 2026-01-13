@@ -10,28 +10,12 @@ from django.utils import timezone
 from .models import Meal, Category, MealVariant
 from .utils import OPEN_TIME, CUTOFF_TIME, is_order_window_open, service_date
 
-# OPEN_TIME et CUTOFF_TIME doivent exister dans ce fichier
-# OPEN_TIME = time(18, 0)
-# CUTOFF_TIME = time(9, 30)
+
 
 def meal_detail(request, slug):
     meal = get_object_or_404(Meal, slug=slug, is_active=True)
     return render(request, 'shop/meal_detail.html', {'meal': meal})
-
-
-
-
-
-OPEN_TIME = time(18, 0)
-CUTOFF_TIME = time(9, 30)
-
-def _is_order_window_open(now_time: time) -> bool:
-    return (now_time >= OPEN_TIME) or (now_time < CUTOFF_TIME)
-
-def _service_date(now_dt):
-    return (now_dt.date() + timedelta(days=1)) if now_dt.time() >= OPEN_TIME else now_dt.date()
-
-
+    
 
 def meal_list(request, category_slug=None):
     now = timezone.localtime()
