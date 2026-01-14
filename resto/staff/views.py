@@ -24,15 +24,15 @@ def admin_dashboard(request):
     date_str = request.GET.get("date")
     if date_str:
         try:
-            day = timezone.datetime.fromisoformat(date_str).date()
+            today = timezone.datetime.fromisoformat(date_str).date()
         except Exception:
-            day = timezone.localdate()
+            today = timezone.localdate()
     else:
-        day = timezone.localdate()
+        today = timezone.localdate()
 
     orders_qs = (
         Order.objects
-        .filter(created_at__date=day)
+        .filter(created_at__date=today)
         .select_related("user")
         .order_by("-created_at")
     )
@@ -43,7 +43,7 @@ def admin_dashboard(request):
 
     top_meals = (
         OrderItem.objects
-        .filter(order__created_at__date=day)
+        .filter(order__created_at__date=today)
         .select_related("meal")
         .values("meal__name")
         .annotate(
@@ -63,7 +63,7 @@ def admin_dashboard(request):
     )
 
     context = {
-        "day": day,
+        "today": today,
         "orders_today": orders_qs[:50],
         "orders_count_today": orders_count,
         "total_sales_today": total_sales,
