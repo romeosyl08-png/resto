@@ -13,6 +13,8 @@ from shop.utils import is_order_window_open
 from django.db import transaction
 from django.db.models import F
 from django.contrib import messages
+from marketing.models import FreeItemVoucher
+
 
 
 @require_POST
@@ -173,12 +175,9 @@ def checkout(request):
                 PromoService.apply_to_order(request.user, order, promo_code)
 
             LoyaltyService.apply_best_voucher_to_order(request.user, order)
-            print("voucher applied? discount_total=", order.discount_total, "total=", order.total)
-            print("items:", list(order.items.values_list("meal_id","variant_code","unit_price","quantity")))
-
 
         # -------- FIN TRANSACTION --------
-            
+            cart.clear()
             used_voucher = FreeItemVoucher.objects.filter(used_order=order).exists()
             return render(request, "orders/checkout_success.html", {"order": order, "used_voucher": used_voucher})
 

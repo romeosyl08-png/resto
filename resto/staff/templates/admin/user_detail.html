@@ -13,79 +13,216 @@
 </div>
 
 <div class="row g-3">
+
+  <!-- Colonne gauche : infos + fidélité + stats -->
   <div class="col-lg-4">
-    <div class="card border-0 shadow-sm">
+
+    <!-- Infos utilisateur -->
+    <div class="card shadow-sm">
       <div class="card-body">
         <div class="d-flex justify-content-between mb-2">
           <span class="text-muted">Inscription</span>
           <span class="fw-semibold">{{ u.date_joined|date:"d/m/Y H:i" }}</span>
         </div>
+
         <div class="d-flex justify-content-between mb-2">
           <span class="text-muted">Staff</span>
           <span class="fw-semibold">{% if u.is_staff %}Oui{% else %}Non{% endif %}</span>
         </div>
+
         <div class="d-flex justify-content-between mb-2">
           <span class="text-muted">Total dépensé (livré)</span>
           <span class="fw-semibold">{{ total_spent }} FCFA</span>
         </div>
 
-        <hr>
+        <hr class="my-3">
 
+        <!-- Fidélité -->
         <h2 class="h6 mb-2">Fidélité</h2>
+
         <div class="d-flex justify-content-between mb-1">
           <span class="text-muted">Progression</span>
           <span class="fw-semibold">{{ loyalty_points }}/8</span>
         </div>
+
+        {% if next_free_in and next_free_in > 0 %}
+          <div class="text-muted small mb-2">
+            Prochain bon dans <strong>{{ next_free_in }}</strong> plat(s) livré(s).
+          </div>
+        {% else %}
+          <div class="text-muted small mb-2">
+            Seuil atteint : un bon peut être généré à la prochaine livraison (si le calcul de tampons le permet).
+          </div>
+        {% endif %}
+
         <div class="d-flex justify-content-between">
-          <span class="text-muted">Bons gratuits</span>
+          <span class="text-muted">Bons gratuits disponibles</span>
           <span class="fw-semibold">{{ free_vouchers }}</span>
+        </div>
+
+        <div class="text-muted small mt-2">
+          Règle : <strong>8 plats livrés → 1 bon</strong>. Le bon s’applique automatiquement au checkout :
+          remise = <em>min(prix unitaire le moins cher, 2000)</em>.
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Stats par statut -->
+    <div class="card shadow-sm mt-3">
+      <div class="card-body">
+        <h2 class="h6 mb-2">Commandes par statut</h2>
+
+        <div class="d-flex justify-content-between small mb-1">
+          <span class="text-muted">En attente</span>
+          <span class="fw-semibold">{{ counts.pending|default:0 }}</span>
+        </div>
+
+        <div class="d-flex justify-content-between small mb-1">
+          <span class="text-muted">Confirmées</span>
+          <span class="fw-semibold">{{ counts.confirmed|default:0 }}</span>
+        </div>
+
+        <div class="d-flex justify-content-between small mb-1">
+          <span class="text-muted">Livrées</span>
+          <span class="fw-semibold">{{ counts.delivered|default:0 }}</span>
+        </div>
+
+        <div class="d-flex justify-content-between small">
+          <span class="text-muted">Annulées</span>
+          <span class="fw-semibold">{{ counts.canceled|default:0 }}</span>
         </div>
       </div>
     </div>
 
-    <div class="card border-0 shadow-sm mt-3">
-      <div class="card-body">
-        <h2 class="h6 mb-2">Commandes par statut</h2>
-        <div class="small text-muted">En attente: {{ counts.pending|default:0 }}</div>
-        <div class="small text-muted">Confirmées: {{ counts.confirmed|default:0 }}</div>
-        <div class="small text-muted">Livrées: {{ counts.delivered|default:0 }}</div>
-        <div class="small text-muted">Annulées: {{ counts.canceled|default:0 }}</div>
-      </div>
-    </div>
   </div>
 
+  <!-- Colonne droite : commandes + vouchers -->
   <div class="col-lg-8">
-    <div class="card border-0 shadow-sm">
+
+    <!-- Dernières commandes -->
+    <div class="card shadow-sm">
       <div class="card-body">
         <h2 class="h6 mb-3">Dernières commandes</h2>
 
         <div class="table-responsive">
           <table class="table table-sm align-middle mb-0">
-            <thead class="table-light">
+            <thead>
               <tr>
                 <th>ID</th>
                 <th>Date</th>
                 <th>Total</th>
+                <th>Avantage</th>
                 <th>Statut</th>
               </tr>
             </thead>
+
             <tbody>
               {% for o in orders %}
                 <tr>
                   <td>#{{ o.id }}</td>
                   <td>{{ o.created_at|date:"d/m/Y H:i" }}</td>
-                  <td>{{ o.total }} FCFA</td>
+                  <td class="fw-semibold">{{ o.total }} FCFA</td>
+
+                  <!-- Avantage : voucher > promo > rien -->
+                  <td>
+                    {% if o.used_vouchers.all|length > 0 %}
+                      <span class="badge bg-success">🎁 Plat gratuit</span>
+                    {% elif o.promo_code %}
+                      <span class="badge bg-info text-dark">🏷️ Promo</span>
+                    {% else %}
+                      <span class="text-muted small">—</span>
+                    {% endif %}
+                  </td>
+
                   <td>{{ o.get_status_display }}</td>
                 </tr>
               {% empty %}
-                <tr><td colspan="4" class="text-center text-muted py-3">Aucune commande.</td></tr>
+                <tr>
+                  <td colspan="5" class="text-center text-muted py-3">
+                    Aucune commande.
+                  </td>
+                </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
 
+        <div class="text-muted small mt-3">
+          Note : “Plat gratuit” apparaît uniquement si un voucher a été <strong>consommé</strong> sur cette commande
+          (donc un objet <code>FreeItemVoucher</code> avec <code>status=USED</code> et <code>used_order=#ID</code>).
+        </div>
+
       </div>
     </div>
+
+    <!-- Vouchers (liste) -->
+    <div class="card shadow-sm mt-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <h3 class="h6 fw-bold mb-0">Bons (vouchers)</h3>
+          <span class="text-muted small">Derniers 10</span>
+        </div>
+
+        <div class="text-muted small mt-2">
+          Un bon est créé quand les tampons dépassent 8 au moment d’une commande livrée.
+          Il peut ensuite être utilisé automatiquement sur une commande suivante.
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-sm mb-0 align-middle">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Statut</th>
+              <th>Valeur max</th>
+              <th>Expire</th>
+              <th>Commande utilisée</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for v in vouchers %}
+              <tr>
+                <td>#{{ v.id }}</td>
+
+                <td>
+                  {% if v.status == "AVAILABLE" %}
+                    <span class="badge bg-success">AVAILABLE</span>
+                  {% elif v.status == "USED" %}
+                    <span class="badge bg-secondary">USED</span>
+                  {% elif v.status == "EXPIRED" %}
+                    <span class="badge bg-danger">EXPIRED</span>
+                  {% else %}
+                    <span class="badge bg-dark">{{ v.status }}</span>
+                  {% endif %}
+                </td>
+
+                <td>{{ v.max_item_value }} FCFA</td>
+                <td>{{ v.expires_at|date:"d/m/Y" }}</td>
+
+                <td>
+                  {% if v.used_order %}
+                    #{{ v.used_order.id }}
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="text-center text-muted py-3">
+                  Aucun voucher.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
   </div>
 </div>
 {% endblock %}

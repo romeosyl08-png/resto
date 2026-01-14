@@ -6,6 +6,11 @@
   <a class="btn btn-primary btn-sm" href="{% url 'staff:admin_meal_add' %}">+ Ajouter</a>
 </div>
 
+<form method="get" class="d-flex gap-2 mb-3">
+  <input class="form-control" name="q" value="{{ q }}" placeholder="Rechercher user/email">
+  <button class="btn btn-dark">Chercher</button>
+</form>
+
 <div class="card border-0 shadow-sm">
   <div class="table-responsive">
     <table class="table table-sm align-middle mb-0">

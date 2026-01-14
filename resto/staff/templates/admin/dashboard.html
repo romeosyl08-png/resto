@@ -3,16 +3,21 @@
 {% block title %}Dashboard – Admin Resto{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-  <div class="col-12">
-    <h1 class="h3 mb-3">Tableau de bord – {{ today }}</h1>
+<div class="row mb-3">
+  <div class="col-12 d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <h1 class="h4 mb-0">Tableau de bord – {{ today }}</h1>
+
+    <form method="get" class="d-flex gap-2">
+      <input type="date" name="date" class="form-control" value="{{ today|date:'Y-m-d' }}">
+      <button class="btn btn-dark">Voir</button>
+    </form>
   </div>
 </div>
 
 <!-- Stat cards -->
 <div class="row g-3 mb-4">
   <div class="col-md-3 col-sm-6">
-    <div class="card card-stat shadow-sm border-0">
+    <div class="card shadow-sm">
       <div class="card-body">
         <div class="text-muted small">Commandes du jour</div>
         <div class="h3 mb-0">{{ orders_count_today }}</div>
@@ -21,7 +26,7 @@
   </div>
 
   <div class="col-md-3 col-sm-6">
-    <div class="card card-stat shadow-sm border-0">
+    <div class="card shadow-sm">
       <div class="card-body">
         <div class="text-muted small">Ventes du jour</div>
         <div class="h3 mb-0">{{ total_sales_today }} FCFA</div>
@@ -30,7 +35,7 @@
   </div>
 
   <div class="col-md-3 col-sm-6">
-    <div class="card card-stat shadow-sm border-0">
+    <div class="card shadow-sm">
       <div class="card-body">
         <div class="text-muted small">En attente</div>
         <div class="h3 mb-0">{{ pending_orders_count }}</div>
@@ -39,16 +44,12 @@
   </div>
 
   <div class="col-md-3 col-sm-6">
-    <div class="card card-stat shadow-sm border-0">
+    <div class="card shadow-sm">
       <div class="card-body">
         <div class="text-muted small">Top plat du jour</div>
         {% if top_meals %}
-          <div class="fw-bold">
-            {{ top_meals.0.meal__name }}
-          </div>
-          <div class="small text-muted">
-            {{ top_meals.0.quantity_sold }} vendu(s)
-          </div>
+          <div class="fw-bold">{{ top_meals.0.meal__name }}</div>
+          <div class="small text-muted">{{ top_meals.0.quantity_sold }} vendu(s)</div>
         {% else %}
           <div class="text-muted small">Aucune vente</div>
         {% endif %}
@@ -60,14 +61,15 @@
 <div class="row g-4">
   <!-- Commandes du jour -->
   <div class="col-lg-7">
-    <div class="card shadow-sm border-0">
-      <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
         <h2 class="h6 mb-0">Commandes du jour</h2>
       </div>
+
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-sm mb-0 align-middle">
-            <thead class="table-light">
+            <thead>
               <tr>
                 <th>ID</th>
                 <th>Client</th>
@@ -76,35 +78,56 @@
                 <th>Adresse</th>
                 <th>Total</th>
                 <th>Statut</th>
-                <th>Action</th>
+                <th>Avantage</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {% for order in orders_today %}
                 <tr>
-                  <td>{{ order.id }}</td>
+                  <td>#{{ order.id }}</td>
                   <td>{{ order.customer_name }}</td>
                   <td>
                     {% if order.user %}
                       <a href="{% url 'staff:admin_user_detail' order.user.id %}" class="text-decoration-none">
                         {{ order.user.username }}
                       </a>
-                    {% else %}
-                      -
-                    {% endif %}
+                    {% else %}-{% endif %}
                   </td>
                   <td>{{ order.phone|default:"-" }}</td>
-                  <td class="text-truncate" style="max-width: 240px;">
-                    {{ order.address|default:"-" }}
-                  </td>
+                  <td class="text-truncate" style="max-width:240px;">{{ order.address|default:"-" }}</td>
                   <td>{{ order.total }} FCFA</td>
                   <td>{{ order.get_status_display }}</td>
-                    {% if order.status != 'delivered' %}
+
+                  <!-- Avantage: voucher / promo -->
+                  <td>
+                    {% if order.used_vouchers.all|length > 0 %}
+                      <span class="badge bg-success">🎁 Gratuit</span>
+                    {% elif order.promo_code %}
+                      <span class="badge bg-info text-dark">🏷️ Promo</span>
+                    {% else %}
+                      <span class="text-muted small">—</span>
+                    {% endif %}
+                  </td>
+
+                  <!-- Actions (td bien formé) -->
+                  <td class="d-flex flex-wrap gap-2">
+                    {% if order.status == "pending" %}
+                      <form method="post" action="{% url 'staff:mark_order_confirmed' order.id %}">
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-outline-secondary" type="submit">Confirmer</button>
+                      </form>
+                    {% endif %}
+
+                    {% if order.status != "delivered" %}
                       <form method="post" action="{% url 'staff:mark_order_delivered' order.id %}">
                         {% csrf_token %}
-                        <button class="btn btn-sm btn-success" type="submit">
-                          Livrer
-                        </button>
+                        <button class="btn btn-sm btn-success" type="submit">Livrer</button>
+                      </form>
+
+                      <form method="post" action="{% url 'staff:mark_order_canceled' order.id %}">
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-outline-secondary" type="submit">Annuler</button>
                       </form>
                     {% else %}
                       <span class="badge bg-success">Livrée</span>
@@ -113,33 +136,28 @@
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="6" class="text-center text-muted py-3">
-                    Aucune commande aujourd’hui.
-                  </td>
+                  <td colspan="9" class="text-center text-muted py-3">Aucune commande aujourd’hui.</td>
                 </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
       </div>
+
     </div>
   </div>
 
-  <!-- Gestion des plats -->
+  <!-- Top plats + plats -->
   <div class="col-lg-5">
-    <div class="card shadow-sm border-0 mb-4">
-      <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+    <div class="card shadow-sm mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
         <h2 class="h6 mb-0">Top plats du jour</h2>
       </div>
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-sm mb-0 align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>Plat</th>
-                <th>Qté</th>
-                <th>CA</th>
-              </tr>
+            <thead>
+              <tr><th>Plat</th><th>Qté</th><th>CA</th></tr>
             </thead>
             <tbody>
               {% for m in top_meals %}
@@ -150,9 +168,7 @@
                 </tr>
               {% empty %}
                 <tr>
-                  <td colspan="3" class="text-center text-muted py-3">
-                    Aucune vente aujourd’hui.
-                  </td>
+                  <td colspan="3" class="text-center text-muted py-3">Aucune vente aujourd’hui.</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -161,23 +177,15 @@
       </div>
     </div>
 
-    <div class="card shadow-sm border-0">
-      <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
         <h2 class="h6 mb-0">Plats</h2>
-        <div>
-
-        </div>
+        <a class="btn btn-sm btn-dark" href="{% url 'staff:meal_create' %}">Nouveau</a>
       </div>
-      <div class="card-body p-0" style="max-height: 320px; overflow-y: auto;">
+      <div class="card-body p-0" style="max-height: 320px; overflow-y:auto;">
         <table class="table table-sm mb-0 align-middle">
-          <thead class="table-light">
-            <tr>
-              <th>Nom</th>
-              <th>Cat.</th>
-              <th>Prix</th>
-              <th>Actif</th>
-              <th></th>
-            </tr>
+          <thead>
+            <tr><th>Nom</th><th>Cat.</th><th>Prix</th><th>Actif</th><th></th></tr>
           </thead>
           <tbody>
             {% for meal in meals %}
@@ -192,13 +200,12 @@
                     <span class="badge bg-secondary">Non</span>
                   {% endif %}
                 </td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="5" class="text-center text-muted py-3">
-                  Aucun plat enregistré.
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-secondary" href="{% url 'staff:meal_update' meal.id %}">Edit</a>
                 </td>
               </tr>
+            {% empty %}
+              <tr><td colspan="5" class="text-center text-muted py-3">Aucun plat enregistré.</td></tr>
             {% endfor %}
           </tbody>
         </table>

@@ -1,36 +1,58 @@
-{% extends "admin/base_admin.html" %}
+{% extends "admin/base.html" %}
 {% block title %}Utilisateurs{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h5 mb-0">Utilisateurs</h1>
-  <span class="text-muted small">{{ users|length }} compte(s)</span>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h5 mb-0">Utilisateurs</h1>
+    <div class="text-muted small">{{ users|length }} compte(s) affiché(s)</div>
+  </div>
+
+  <!-- Recherche -->
+  <form method="get" class="d-flex gap-2" style="min-width:280px;">
+    <input
+      type="text"
+      name="q"
+      class="form-control"
+      placeholder="Rechercher username / email"
+      value="{{ q|default:'' }}"
+    >
+    <button class="btn btn-dark">Chercher</button>
+  </form>
 </div>
 
-<div class="card border-0 shadow-sm">
+<div class="card shadow-sm">
   <div class="table-responsive">
     <table class="table table-sm align-middle mb-0">
-      <thead class="table-light">
+      <thead>
         <tr>
-          <th>ID</th>
+          <th style="width:80px;">ID</th>
           <th>Username</th>
           <th>Email</th>
-          <th>Inscription</th>
-          <th>Staff</th>
-          <th></th>
+          <th style="width:140px;">Inscription</th>
+          <th style="width:90px;">Staff</th>
+          <th style="width:90px;"></th>
         </tr>
       </thead>
       <tbody>
         {% for u in users %}
           <tr>
             <td>{{ u.id }}</td>
-            <td>
+
+            <td class="fw-semibold">
               <a href="{% url 'staff:admin_user_detail' u.id %}" class="text-decoration-none">
                 {{ u.username }}
               </a>
             </td>
-            <td>{{ u.email|default:"-" }}</td>
-            <td>{{ u.date_joined|date:"d/m/Y" }}</td>
+
+            <td class="text-muted">
+              {{ u.email|default:"-" }}
+            </td>
+
+            <td class="text-muted">
+              {{ u.date_joined|date:"d/m/Y" }}
+            </td>
+
             <td>
               {% if u.is_staff %}
                 <span class="badge bg-success">Oui</span>
@@ -38,8 +60,9 @@
                 <span class="badge bg-secondary">Non</span>
               {% endif %}
             </td>
+
             <td class="text-end">
-              <a class="btn btn-sm btn-outline-primary"
+              <a class="btn btn-sm btn-outline-secondary"
                  href="{% url 'staff:admin_user_detail' u.id %}">
                 Voir
               </a>
@@ -55,5 +78,9 @@
       </tbody>
     </table>
   </div>
+</div>
+
+<div class="text-muted small mt-2">
+  Astuce : la recherche ne filtre que les 200 derniers utilisateurs si ta view limite à 200 (ce qui est très bien pour éviter de tuer la DB).
 </div>
 {% endblock %}
