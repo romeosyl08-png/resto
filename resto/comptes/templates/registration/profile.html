@@ -8,18 +8,48 @@
   <div class="col-lg-4">
     <div class="card card-body shadow-sm mb-3">
       <h2 class="h5">Informations personnelles</h2>
+
       <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+
         <div class="mb-3">
-          <label class="form-label text-muted">Adresse de livraison</label>
-          <div class="form-control bg-light">
-            {{ profile.address }}
-          </div>
+          {{ form.full_name.label_tag }}
+          {{ form.full_name }}
+          {% if form.full_name.errors %}<div class="text-danger small">{{ form.full_name.errors }}</div>{% endif %}
         </div>
+
+        <div class="mb-3">
+          {{ form.phone.label_tag }}
+          {{ form.phone }}
+          {% if form.phone.errors %}<div class="text-danger small">{{ form.phone.errors }}</div>{% endif %}
+        </div>
+
+        <div class="mb-3">
+          {{ form.address.label_tag }}
+          {{ form.address }}
+          {% if form.address.errors %}<div class="text-danger small">{{ form.address.errors }}</div>{% endif %}
+        </div>
+
+        <div id="delivery-warning-profile" class="alert alert-danger d-none mb-3">
+          Si “Autre endroit” : livraison non incluse (Yango/Glovo à la charge du client).
+        </div>
+
         <button type="submit" class="btn btn-primary btn-sm">Mettre à jour</button>
       </form>
+
+      <script>
+        (function(){
+          const select = document.getElementById("id_address");
+          const warn = document.getElementById("delivery-warning-profile");
+          function sync(){
+            if (!select || !warn) return;
+            warn.classList.toggle("d-none", select.value !== "other");
+          }
+          if (select) { select.addEventListener("change", sync); sync(); }
+        })();
+      </script>
     </div>
+
 
     <div class="card card-body shadow-sm">
       <h2 class="h6 mb-2">Fidélité</h2>

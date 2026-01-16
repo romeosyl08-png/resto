@@ -15,6 +15,12 @@ from django.db.models import F
 from django.contrib import messages
 from marketing.models import FreeItemVoucher
 
+ADDRESS_LABELS = {
+    "campus": "Campus / Résidence",
+    "cocody": "Cocody",
+    "plateau": "Plateau",
+    "other": "Autre endroit (livraison non incluse : Yango/Glovo à la charge du client)",
+}
 
 
 @require_POST
@@ -111,17 +117,26 @@ def checkout(request):
         if not form.is_valid():
             return render(request, "orders/checkout.html", {"cart": cart, "form": form})
 
-        # MAJ profil
+        # ----- adresse lisible pour Order (SOLUTION 1) -----
+        addr_code = form.cleaned_data["address"]          # ex: "other"
+        addr_detail = form.cleaned_data.get("address_detail", "").strip()
+        addr_text = ADDRESS_LABELS.get(addr_code, addr_code)
+        if addr_code == "other":
+            addr_text = (
+                "Autre endroit (livraison non incluse : Yango/Glovo)\n"
+                f"Adresse client : {addr_detail}"
+            )
+
+
+        # MAJ profil (tu peux garder le code ici)
         profile.full_name = form.cleaned_data["customer_name"]
         profile.phone = form.cleaned_data["phone"]
-        profile.address = form.cleaned_data["address"]
+        profile.address = addr_code  # profil stocke le code (optionnel)
         profile.save()
 
         promo_code = request.POST.get("promo_code", "").strip()
 
-        # -------- TRANSACTION ATOMIQUE --------
         with transaction.atomic():
-            # 1) Re-check stock + lock lignes variants
             locked = {}
             for item in cart:
                 v = MealVariant.objects.select_for_update().get(
@@ -137,18 +152,19 @@ def checkout(request):
                     return redirect("orders:cart_detail")
                 locked[(v.meal_id, v.code)] = v
 
-            # 2) Créer commande
+            # 2) Créer commande (adresse lisible)
             order = Order.objects.create(
                 user=request.user,
                 customer_name=profile.full_name,
                 phone=profile.phone,
-                address=profile.address,
+                address=addr_text,          # <-- ICI
+                address_detail=addr_detail, 
                 subtotal=Decimal("0.00"),
                 discount_total=Decimal("0.00"),
                 total=Decimal("0.00"),
             )
 
-            # 3) Créer items (prix du variant)
+            # 3) Items
             for item in cart:
                 OrderItem.objects.create(
                     order=order,
@@ -158,7 +174,7 @@ def checkout(request):
                     unit_price=item["unit_price"],
                 )
 
-            # 4) Décrément stock (safe, via F())
+            # 4) Stock
             for item in cart:
                 MealVariant.objects.filter(
                     meal_id=item["meal"].id,
@@ -170,16 +186,15 @@ def checkout(request):
             order.recompute_subtotal()
             order.save(update_fields=["subtotal", "total"])
 
-            # 6) Promo / fidélité (si ces services modifient DB, c’est mieux dans la transaction)
+            # 6) Promo / fidélité
             if promo_code:
                 PromoService.apply_to_order(request.user, order, promo_code)
 
             LoyaltyService.apply_best_voucher_to_order(request.user, order)
 
-        # -------- FIN TRANSACTION --------
-            cart.clear()
-            used_voucher = FreeItemVoucher.objects.filter(used_order=order).exists()
-            return render(request, "orders/checkout_success.html", {"order": order, "used_voucher": used_voucher})
+        cart.clear()
+        used_voucher = FreeItemVoucher.objects.filter(used_order=order).exists()
+        return render(request, "orders/checkout_success.html", {"order": order, "used_voucher": used_voucher})
 
     else:
         form = CheckoutForm(initial={
@@ -188,3 +203,4 @@ def checkout(request):
             "address": profile.address,
         })
         return render(request, "orders/checkout.html", {"cart": cart, "form": form})
+
