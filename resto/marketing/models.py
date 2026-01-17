@@ -79,7 +79,9 @@ class PromotionRedemption(models.Model):
 
 class LoyaltyAccount(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="loyalty")
-    stamps = models.PositiveIntegerField(default=0)  # reste modulo 8
+    count_500 = models.PositiveIntegerField(default=0) # reste modulo 8
+    count_1000 = models.PositiveIntegerField(default=0) # reste modulo 8
+    count_1500 = models.PositiveIntegerField(default=0) # reste modulo 8
     updated_at = models.DateTimeField(auto_now=True)
 
 
@@ -90,7 +92,7 @@ class FreeItemVoucher(models.Model):
         EXPIRED = "EXPIRED", "Expired"
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="free_vouchers")
-    max_item_value = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("2000.00"))
+    tier_value = models.PositiveIntegerField(default=500) #stamps=f()
     expires_at = models.DateTimeField()
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.AVAILABLE)
 

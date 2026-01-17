@@ -17,4 +17,4 @@ class VoucherRedeemSerializer(serializers.Serializer):
 class VoucherSerializer(serializers.ModelSerializer):
     class Meta:
         model = FreeItemVoucher
-        fields = ["id", "max_item_value", "expires_at", "status", "created_at"]
+        fields = ["id", "tier_value", "expires_at", "status", "created_at"]

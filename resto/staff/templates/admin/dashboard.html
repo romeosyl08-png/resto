@@ -102,7 +102,9 @@
                   <!-- Avantage: voucher / promo -->
                   <td>
                     {% if order.used_vouchers.all|length > 0 %}
-                      <span class="badge bg-success">🎁 Gratuit</span>
+                      {% with v=order.used_vouchers.all.0 %}
+                        <span class="badge bg-success">🎁 Bon {{ v.tier_value }} FCFA</span>
+                      {% endwith %}
                     {% elif order.promo_code %}
                       <span class="badge bg-info text-dark">🏷️ Promo</span>
                     {% else %}

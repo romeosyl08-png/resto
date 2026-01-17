@@ -9,7 +9,7 @@ from django.views.decorators.http import require_POST
 
 from orders.models import Order, OrderItem
 from shop.models import Meal
-from .forms import MealForm
+from .forms import MealForm, MealVariantFormSet
 
 from marketing.models import LoyaltyAccount, FreeItemVoucher
 from marketing.services import LoyaltyService
@@ -128,7 +128,13 @@ def admin_user_detail(request, user_id: int):
         .order_by("-created_at")[:10]
     )
 
-    next_free_in = (8 - (loyalty.stamps % 8)) if (loyalty.stamps % 8) != 0 else 0
+    def need_to_next(n: int) -> int:
+        r = n % 8
+        return 0 if r == 0 else (8 - r)
+
+    next_500 = need_to_next(loyalty.count_500)
+    next_1000 = need_to_next(loyalty.count_1000)
+    next_1500 = need_to_next(loyalty.count_1500)
 
     return render(request, "admin/user_detail.html", {
         "u": u,
@@ -140,11 +146,18 @@ def admin_user_detail(request, user_id: int):
             "canceled": counts_map.get("canceled", 0),
         },
         "total_spent": total_spent,
-        "loyalty_points": loyalty.stamps,
-        "next_free_in": next_free_in,
-        "free_vouchers": vouchers_available,
+
+        # fidélité par tiers
+        "c500": loyalty.count_500,
+        "c1000": loyalty.count_1000,
+        "c1500": loyalty.count_1500,
+        "next_500": next_500,
+        "next_1000": next_1000,
+        "next_1500": next_1500,
         "vouchers": vouchers_list,
+        "free_vouchers": vouchers_available,
     })
+
 
 
 # -------- MEALS CRUD --------
@@ -176,13 +189,17 @@ def meal_update(request, meal_id: int):
     meal = get_object_or_404(Meal, id=meal_id)
     if request.method == "POST":
         form = MealForm(request.POST, request.FILES, instance=meal)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Plat modifié.")
+        variant_formset = MealVariantFormSet(request.POST, instance=meal)
+        if form.is_valid() and variant_formset.is_valid():
+            with transaction.atomic():
+                form.save()
+                variant_formset.save()
+                messages.success(request, "Plat modifié.")
             return redirect("staff:meal_list")
     else:
         form = MealForm(instance=meal)
-    return render(request, "admin/meals/meal_form.html", {"form": form, "meal": meal, "mode": "edit"})
+        variant_formset = MealVariantFormSet(instance=meal)
+    return render(request, "admin/meals/meal_form.html", {"form": form,"variant_formset": variant_formset, "meal": meal, "mode": "edit"})
 
 
 @staff_member_required
@@ -237,3 +254,4 @@ def mark_order_delivered(request, order_id: int):
 
     messages.success(request, f"Commande #{order.id} livrée (fidélité appliquée).")
     return redirect("staff:admin_dashboard")
+

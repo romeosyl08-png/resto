@@ -8,6 +8,7 @@ from .models import  UserProfile
 from django.shortcuts import render
 from django.db.models import Count
 from marketing.models import LoyaltyAccount, FreeItemVoucher
+from django.utils import timezone
 
 def signup(request):
     next_url = request.GET.get('next') or request.POST.get('next') or '/'
@@ -37,6 +38,16 @@ def profile(request):
         form = ProfileForm(instance=profile_obj)
 
     loyalty, _ = LoyaltyAccount.objects.get_or_create(user=request.user)
+    available_vouchers = (
+        FreeItemVoucher.objects
+        .filter(user=request.user, status=FreeItemVoucher.Status.AVAILABLE, expires_at__gt=timezone.now())
+        .order_by("expires_at")
+    )
+
+    v500 = available_vouchers.filter(tier_value=500)
+    v1000 = available_vouchers.filter(tier_value=1000)
+    v1500 = available_vouchers.filter(tier_value=1500)
+
 
     free_vouchers = FreeItemVoucher.objects.filter(
         user=request.user,
@@ -65,15 +76,34 @@ def profile(request):
         "canceled": counts_map.get("canceled", 0),
     }
 
-    next_free_in = (8 - (loyalty.stamps % 8)) if (loyalty.stamps % 8) != 0 else 0
+
+    def need_to_next(n: int) -> int:
+        r = n % 8
+        return 0 if r == 0 else (8 - r)
+
+    next_500 = need_to_next(loyalty.count_500)
+    next_1000 = need_to_next(loyalty.count_1000)
+    next_1500 = need_to_next(loyalty.count_1500)
 
     return render(request, "registration/profile.html", {
         "form": form,
-        "profile": profile_obj,   # <-- AJOUT
+        "profile": profile_obj,
         "orders": qs,
         "status": status,
         "counts": counts,
-        "loyalty_points": loyalty.stamps,
+
+        # fidélité par tiers
+        "c500": loyalty.count_500,
+        "c1000": loyalty.count_1000,
+        "c1500": loyalty.count_1500,
+        "next_500": next_500,
+        "next_1000": next_1000,
+        "next_1500": next_1500,
+        "v500": v500,
+        "v1000": v1000,
+        "v1500": v1500,
+        "vouchers_available": available_vouchers,
         "free_vouchers": free_vouchers,
-        "next_free_in" : next_free_in,
     })
+
+

@@ -106,57 +106,75 @@ class PromoService:
 
 class LoyaltyService:
     STAMPS_TARGET = 8
-    VOUCHER_MAX_VALUE = Decimal("2000.00")
     VOUCHER_DAYS_VALID = 30
 
-    @staticmethod
-    def _meals_count(order: Order) -> int:
-        return sum(OrderItem.objects.filter(order=order).values_list("quantity", flat=True))
+    TIERS = (500, 1000, 1500)
 
     @staticmethod
     @transaction.atomic
     def on_order_delivered(order: Order) -> None:
-        if not order.user:
-            return
-        if order.status != "delivered":
+        if not order.user or order.status != "delivered":
             return
 
-        acc, _ = LoyaltyAccount.objects.get_or_create(user=order.user)
-        acc.stamps += max(0, int(LoyaltyService._meals_count(order)))
+        acc, _ = LoyaltyAccount.objects.select_for_update().get_or_create(user=order.user)
 
-        free_count = acc.stamps // LoyaltyService.STAMPS_TARGET
-        acc.stamps = acc.stamps % LoyaltyService.STAMPS_TARGET
-        acc.save(update_fields=["stamps", "updated_at"])
+        items = OrderItem.objects.filter(order=order)
 
-        for _ in range(free_count):
-            FreeItemVoucher.objects.create(
-                user=order.user,
-                max_item_value=LoyaltyService.VOUCHER_MAX_VALUE,
-                expires_at=timezone.now() + timedelta(days=LoyaltyService.VOUCHER_DAYS_VALID)
+        # incrément compteurs par prix unitaire
+        for it in items:
+            q = int(it.quantity or 0)
+            if q <= 0:
+                continue
+            if it.unit_price == 500:
+                acc.count_500 += q
+            elif it.unit_price == 1000:
+                acc.count_1000 += q
+            elif it.unit_price == 1500:
+                acc.count_1500 += q
 
-            )
+        # crée bons par tier, décrémente modulo 8
+        def issue(tier: int, field: str):
+            n = getattr(acc, field)
+            free_count = n // LoyaltyService.STAMPS_TARGET
+            setattr(acc, field, n % LoyaltyService.STAMPS_TARGET)
+            for _ in range(free_count):
+                FreeItemVoucher.objects.create(
+                    user=order.user,
+                    tier_value=tier,
+                    expires_at=timezone.now() + timedelta(days=LoyaltyService.VOUCHER_DAYS_VALID),
+                )
+
+        issue(500, "count_500")
+        issue(1000, "count_1000")
+        issue(1500, "count_1500")
+
+        acc.save(update_fields=["count_500", "count_1000", "count_1500", "updated_at"])
 
     @staticmethod
     @transaction.atomic
     def apply_best_voucher_to_order(user, order: Order) -> tuple[bool, str, Decimal]:
-        """
-        Applique 1 bon dispo (le plus proche d'expirer) :
-        remise = min(prix unitaire le moins cher, max_item_value).
-        """
-        v = (FreeItemVoucher.objects.select_for_update()
-             .filter(user=user, status=FreeItemVoucher.Status.AVAILABLE, expires_at__gt=timezone.now())
-             .order_by("expires_at")
-             .first())
-        if not v:
-            return False, "NO_VOUCHER", Decimal("0.00")
-
         items = list(OrderItem.objects.filter(order=order))
         if not items:
             return False, "EMPTY_ORDER", Decimal("0.00")
 
-        cheapest_unit = min(i.unit_price for i in items)
-        discount = min(cheapest_unit, v.max_item_value)
+        # quels tiers sont présents dans cette commande ?
+        present_prices = set(i.unit_price for i in items)
 
+        # prend le bon qui expire le plus tôt MAIS applicable
+        v = (FreeItemVoucher.objects.select_for_update()
+            .filter(
+                user=user,
+                status=FreeItemVoucher.Status.AVAILABLE,
+                expires_at__gt=timezone.now(),
+                tier_value__in=present_prices,  # clé : match exact
+            )
+            .order_by("expires_at")
+            .first())
+
+        if not v:
+            return False, "NO_MATCHING_VOUCHER", Decimal("0.00")
+
+        discount = Decimal(str(v.tier_value))  # valeur fixe, pas un plafond global
         order.discount_total += discount
         order.total = max(Decimal("0.00"), order.subtotal - order.discount_total)
         order.save(update_fields=["discount_total", "total"])
@@ -165,3 +183,4 @@ class LoyaltyService:
         v.used_order = order
         v.save(update_fields=["status", "used_order"])
         return True, "OK", discount
+

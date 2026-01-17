@@ -56,7 +56,7 @@ class PromotionRedemptionAdmin(admin.ModelAdmin):
 
 @admin.register(LoyaltyAccount)
 class LoyaltyAccountAdmin(admin.ModelAdmin):
-    list_display = ("user", "stamps", "updated_at")
+    list_display = ("user", "count_500", "count_1000", "count_1500", "updated_at")
     search_fields = ("user__username", "user__email")
     ordering = ("-updated_at",)
     readonly_fields = ("updated_at",)
@@ -66,15 +66,13 @@ class LoyaltyAccountAdmin(admin.ModelAdmin):
 class FreeItemVoucherAdmin(admin.ModelAdmin):
     list_display = (
         "id", "user", "status",
-        "max_item_value", "expires_at",
+        "tier_value", "expires_at",
         "used_order", "created_at", "is_expired",
     )
-    list_filter = ("status",)
+    list_filter = ("status", "tier_value")
     search_fields = ("user__username", "user__email", "used_order__id")
     ordering = ("-created_at",)
     readonly_fields = ("created_at",)
-
+    @admin.display(boolean=True, description="Expiré ?")
     def is_expired(self, obj):
-        return obj.expires_at and obj.expires_at <= timezone.now()
-    is_expired.boolean = True
-    is_expired.short_description = "Expiré ?"
+        return bool(obj.expires_at and obj.expires_at <= timezone.now())

@@ -51,34 +51,103 @@
     </div>
 
 
-    <div class="card card-body shadow-sm">
-      <h2 class="h6 mb-2">Fidélité</h2>
+    <h2 class="h6 mb-2">Fidélité (par prix)</h2>
+      <div class="d-flex justify-content-between">
+        <span class="text-muted">500 FCFA</span>
+        <span class="fw-semibold">{{ c500|default:0 }}/8</span>
+      </div>
+      {% if next_500 > 0 %}
+        <div class="text-muted small mb-2">Prochain bon 500 dans {{ next_500 }} plat(s).</div>
+      {% else %}
+        <div class="text-muted small mb-2">Bon 500 prêt (à la prochaine livraison si génération activée).</div>
+      {% endif %}
 
       <div class="d-flex justify-content-between">
-        <span class="text-muted">Progression</span>
-        <span class="fw-semibold">{{ loyalty_points }}/8</span>
+        <span class="text-muted">1000 FCFA</span>
+        <span class="fw-semibold">{{ c1000|default:0 }}/8</span>
       </div>
-
-      <div class="d-flex justify-content-between mt-1">
-        <span class="text-muted">Plats gratuits</span>
-        <span class="fw-semibold">{{ free_vouchers }}</span>
-      </div>
-
-      {% if free_vouchers|default:0 > 0 %}
-        <div class="alert alert-success py-2 mt-2 mb-0">
-          🎁 Tu as {{ free_vouchers }} plat(s) gratuit(s) disponible(s).
-        </div>
+      {% if next_1000 > 0 %}
+        <div class="text-muted small mb-2">Prochain bon 1000 dans {{ next_1000 }} plat(s).</div>
+      {% else %}
+        <div class="text-muted small mb-2">Bon 1000 prêt (à la prochaine livraison si génération activée).</div>
       {% endif %}
+
+      <div class="d-flex justify-content-between">
+        <span class="text-muted">1500 FCFA</span>
+        <span class="fw-semibold">{{ c1500|default:0 }}/8</span>
+      </div>
+      {% if next_1500 > 0 %}
+        <div class="text-muted small mb-2">Prochain bon 1500 dans {{ next_1500 }} plat(s).</div>
+      {% else %}
+        <div class="text-muted small mb-2">Bon 1500 prêt (à la prochaine livraison si génération activée).</div>
+      {% endif %}
+
+
+
+        <hr class="my-3">
+
+        <h3 class="h6 mb-2">Bons disponibles</h3>
+
+        {% if vouchers_available and vouchers_available|length > 0 %}
+
+          <div class="mb-2">
+            <div class="fw-semibold">500 FCFA</div>
+            {% if v500|length > 0 %}
+              <ul class="small mb-2">
+                {% for v in v500 %}
+                  <li>
+                    Bon #{{ v.id }} — expire le {{ v.expires_at|date:"d/m/Y" }}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <div class="text-muted small mb-2">Aucun bon 500.</div>
+            {% endif %}
+
+            <div class="fw-semibold">1000 FCFA</div>
+            {% if v1000|length > 0 %}
+              <ul class="small mb-2">
+                {% for v in v1000 %}
+                  <li>
+                    Bon #{{ v.id }} — expire le {{ v.expires_at|date:"d/m/Y" }}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <div class="text-muted small mb-2">Aucun bon 1000.</div>
+            {% endif %}
+
+            <div class="fw-semibold">1500 FCFA</div>
+            {% if v1500|length > 0 %}
+              <ul class="small mb-0">
+                {% for v in v1500 %}
+                  <li>
+                    Bon #{{ v.id }} — expire le {{ v.expires_at|date:"d/m/Y" }}
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <div class="text-muted small">Aucun bon 1500.</div>
+            {% endif %}
+          </div>
+
+          <div class="text-muted small">
+            Règle : un bon 500/1000/1500 s’applique uniquement sur un plat du même prix.
+            Le système utilise automatiquement le bon qui expire le plus tôt et qui correspond à ton panier.
+          </div>
+
+        {% else %}
+          <div class="text-muted small">
+            Aucun bon disponible pour le moment.
+          </div>
+        {% endif %}
+
+      </div>
+
       <div class="text-muted small mt-2">
-        Règle : 8 plats achetés → 1 bon “plat gratuit”.
-        Le bon s’applique sur le plat le moins cher de la commande (plafonné).
+        Règle : 8 achats d’un même prix → 1 bon du même prix. Pas de “montée en gamme” gratuite.
       </div>
-      {% if next_free_in > 0 %}
-        <div class="text-muted small mt-1">
-          Prochain plat gratuit dans {{ next_free_in }} plat(s).
-        </div>
-      {% endif %}
-    </div>
+
   </div>
 
   <div class="col-lg-8">
@@ -134,9 +203,11 @@
                 <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
                 <td>
                   {% if order.used_vouchers.all|length > 0 %}
-                    <span class="badge badge-primary">🎁 Plat gratuit</span>
+                    {% with v=order.used_vouchers.all.0 %}
+                      <span class="badge bg-success">🎁 Bon {{ v.tier_value }} FCFA</span>
+                    {% endwith %}
                   {% elif order.promo_code %}
-                    <span class="badge badge-primary">🏷️ Promo</span>
+                    <span class="badge bg-info text-dark">🏷️ Promo</span>
                   {% else %}
                     <span class="text-muted small">—</span>
                   {% endif %}

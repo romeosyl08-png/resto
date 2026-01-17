@@ -1,5 +1,6 @@
 {% extends "admin/base_admin.html" %}
-{% block title %}{% if mode == "add" %}Ajouter plat{% else %}Modifier plat{% endif %}{% endblock %}
+{% block title %}{% if mode == "add" %}Ajouter plat{% else %}Modifieiuop^poiur plat{% endif %}{% endblock %}
+
 {% block content %}
 <div class="card border-0 shadow-sm">
   <div class="card-body p-4">
@@ -7,12 +8,32 @@
 
     <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
+
+      <h2 class="h6 mt-2">Infos du plat</h2>
       {{ form.as_p }}
-      <div class="d-flex gap-2">
-        <button class="btn btn-primary" type="submit">Enregistrer</button>
-        <a class="btn btn-outline-secondary" href="{% url 'staff:admin_meal_list' %}">Annuler</a>
-      </div>
-    </form>
+
+     <form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  <h2 class="h6 mt-2">Infos du plat</h2>
+  {{ form.as_p }}
+
+  <hr class="my-3">
+
+  <h2 class="h6">Variantes</h2>
+
+  {{ variant_formset.management_form }}
+
+  {% for vf in variant_formset %}
+    <div class="card card-body mb-2">
+      {{ vf.as_p }}
+    </div>
+  {% endfor %}
+
+  <div class="d-flex gap-2 mt-3">
+    <button class="btn btn-primary" type="submit">Enregistrer</button>
+    <a class="btn btn-outline-secondary" href="{% url 'staff:admin_meal_list' %}">Annuler</a>
   </div>
-</div>
+</form>
+qzrestrdytufigohpj^kpl^m$ù
 {% endblock %}
