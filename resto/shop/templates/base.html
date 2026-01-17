@@ -3,7 +3,7 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Resto{% endblock %}</title>
+    <title>{% block title %}ChezMJ{% endblock %}</title>
   
     <!-- Bootstrap 5 -->
     <link
@@ -23,7 +23,7 @@
 
    <nav class="navbar navbar-expand-lg navbar-dark navbar-food sticky-top">
     <div class="container">
-      <a class="navbar-brand" href="{% url 'shop:meal_list' %}">Resto Cuistot</a>
+      <a class="navbar-brand" href="{% url 'shop:meal_list' %}">Chez Mama Jackie</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
               data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
@@ -63,27 +63,27 @@
       </div>
     </div>
   </nav>
-{% if messages %}
-  <div class="container py-3">
-    {% for message in messages %}
-      <div class="alert
-        {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}
-        mb-2">
-        {{ message }}
-      </div>
-    {% endfor %}
-  </div>
-{% endif %}
-  <main class="main-content">
-    {% block content %}{% endblock %}
-  </main>
+  {% if messages %}
+    <div class="container py-3">
+      {% for message in messages %}
+        <div class="alert
+          {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}
+          mb-2">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+    <main class="main-content">
+      {% block content %}{% endblock %}
+    </main>
 
-  {# Bottom bar mobile #}
-  <nav class="bottom-nav">
-    <a class="bn-item" href="{% url 'shop:meal_list' %}">Menu</a>
+    {# Bottom bar mobile #}
+    <nav class="bottom-nav">
+      <a class="bn-item" href="{% url 'shop:meal_list' %}">Menu</a>
 
-    <a class="bn-item position-relative" href="{% url 'orders:cart_detail' %}">
-  Panier
+      <a class="bn-item position-relative" href="{% url 'orders:cart_detail' %}">
+    Panier
             {% with c=cart|default:'' %}
               {% if c and c|length > 0 %}
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -100,11 +100,11 @@
     {% endif %}
   </nav>
 
-</body>
 
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 
 </body>

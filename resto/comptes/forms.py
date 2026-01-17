@@ -2,9 +2,7 @@ from django import forms
 from .models import UserProfile
 
 ADDRESS_CHOICES = [
-    ("campus", "Campus / Résidence"),
-    ("cocody", "Cocody"),
-    ("plateau", "Plateau"),
+    ("IMERTEL", "IMERTEL"),
     ("other", "Autre endroit (Yango/Glovo)"),
 ]
 

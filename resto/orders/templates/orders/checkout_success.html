@@ -18,6 +18,24 @@
       <p class="text-muted mb-3">
         Votre commande <strong>#{{ order.id }}</strong> a été enregistrée avec succès.
       </p>
+      <!-- Détails de la commande -->
+      <div class="text-start mx-auto mt-3" style="max-width: 420px;">
+        <div class="fw-bold mb-2">Détails</div>
+
+        {% for it in order.items.all %}
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div class="me-3">
+              <div class="fw-semibold">{{ it.meal.name }}</div>
+              <div class="text-muted small">
+                Variante: {{ it.variant_code }} • Qté: {{ it.quantity }}
+              </div>
+            </div>
+            <div class="fw-semibold">{{ it.subtotal }} FCFA</div>
+          </div>
+        {% empty %}
+          <div class="text-muted">Aucun item.</div>
+        {% endfor %}
+      </div>
 
       <!-- Récap réel (source de vérité = Order) -->
       <div class="text-start mx-auto" style="max-width: 420px;">

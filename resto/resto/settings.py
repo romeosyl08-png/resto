@@ -100,6 +100,7 @@ if IS_PRODUCTION:
     DATABASES = {
         "default": dj_database_url.parse(os.environ["DATABASE_URL"])
     }
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 else:
     # Local → SQLite
     DATABASES = {

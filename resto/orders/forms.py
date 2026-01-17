@@ -1,9 +1,7 @@
 from django import forms
 
 ADDRESS_CHOICES = [
-    ("campus", "Campus / Résidence"),
-    ("cocody", "Cocody"),
-    ("plateau", "Plateau"),
+    ("IMERTEL", "IMERTEL"),
     ("other", "Autre endroit (livraison via Yango/Glovo)"),
 ]
 

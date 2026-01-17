@@ -194,6 +194,7 @@ def checkout(request):
 
         cart.clear()
         used_voucher = FreeItemVoucher.objects.filter(used_order=order).exists()
+        order = Order.objects.select_related("user").prefetch_related("items__meal").get(pk=order.pk)
         return render(request, "orders/checkout_success.html", {"order": order, "used_voucher": used_voucher})
 
     else:

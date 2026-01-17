@@ -626,3 +626,24 @@ select:-webkit-autofill{
   opacity:.55;
   cursor:not-allowed;
 }
+/* Force dark list-group (Bootstrap 5.3 variables) */
+.list-group{
+  --bs-list-group-bg: var(--surface);
+  --bs-list-group-color: var(--text);
+  --bs-list-group-border-color: var(--border);
+  --bs-list-group-action-hover-bg: var(--surface-hover);
+  --bs-list-group-action-active-bg: var(--surface-2);
+  --bs-list-group-action-active-color: var(--text);
+}
+
+.list-group-item{
+  background-color: var(--bs-list-group-bg) !important;
+  color: var(--bs-list-group-color) !important;
+  border-color: var(--bs-list-group-border-color) !important;
+}
+
+.list-group-item .text-muted{
+  color: var(--text-3) !important;
+}
+
+body{ outline: 5px solid red !important; }
