@@ -1,0 +1,164 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}
+  {% if mode == "create" %}Ajouter un plat{% else %}Modifier {{ meal.name }}{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-4">
+
+    <h1 class="h5 mb-3">
+      {% if mode == "create" %}Ajouter un plat{% else %}Modifier {{ meal.name }}{% endif %}
+    </h1>
+
+    <form method="post" enctype="multipart/form-data" id="meal-form">
+      {% csrf_token %}
+
+      <h2 class="h6 mt-3">Infos du plat</h2>
+      {% for field in form %}
+        {% if field.name != "weekdays" %}
+          <div class="mb-3">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.errors %}
+              <div class="text-danger small">{{ field.errors }}</div>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+
+      <h2 class="h6 mt-4">Jours disponibles</h2>
+      <div class="d-flex flex-wrap gap-3 mb-4">
+        {% for checkbox in form.weekdays %}
+          <div class="form-check">
+            {{ checkbox.tag }}
+            <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+          </div>
+        {% endfor %}
+      </div>
+
+      <hr class="my-4">
+
+      <h2 class="h6">Variantes</h2>
+      {{ variant_formset.non_form_errors }}
+      {{ variant_formset.management_form }}
+
+      <div id="variants-container">
+        {% for variant_form in variant_formset %}
+          <div class="card card-body mb-3 variant-form">
+            {% for hidden_field in variant_form.hidden_fields %}
+              {{ hidden_field }}
+            {% endfor %}
+
+            <div class="row g-3">
+              {% for field in variant_form.visible_fields %}
+                {% if field.name != "DELETE" %}
+                  <div class="col-md-6">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}
+                      <div class="text-danger small">{{ field.errors }}</div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+
+            {% if variant_form.DELETE %}
+              <div class="form-check mt-3">
+                {{ variant_form.DELETE }}
+                <label class="form-check-label" for="{{ variant_form.DELETE.id_for_label }}">
+                  Supprimer cette variante
+                </label>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+
+      <template id="empty-variant-template">
+        <div class="card card-body mb-3 variant-form">
+          {% for hidden_field in variant_formset.empty_form.hidden_fields %}
+            {{ hidden_field }}
+          {% endfor %}
+
+          <div class="row g-3">
+            {% for field in variant_formset.empty_form.visible_fields %}
+              {% if field.name != "DELETE" %}
+                <div class="col-md-6">
+                  {{ field.label_tag }}
+                  {{ field }}
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          {% if variant_formset.empty_form.DELETE %}
+            <div class="form-check mt-3">
+              {{ variant_formset.empty_form.DELETE }}
+              <label class="form-check-label" for="{{ variant_formset.empty_form.DELETE.id_for_label }}">
+                Supprimer cette variante
+              </label>
+            </div>
+          {% endif %}
+        </div>
+      </template>
+
+      <button type="button" class="btn btn-sm btn-secondary mb-3" id="add-variant">
+        Ajouter une variante
+      </button>
+
+      <hr class="my-4">
+
+      <div class="d-flex gap-2 mt-3">
+        <button class="btn btn-primary" type="submit">Enregistrer</button>
+        <a class="btn btn-outline-secondary" href="{% url 'staff:meal_list' %}">Annuler</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const nameInput = document.getElementById("id_name");
+  const slugInput = document.getElementById("id_slug");
+  const addButton = document.getElementById("add-variant");
+  const container = document.getElementById("variants-container");
+  const totalForms = document.getElementById("id_mealvariant_set-TOTAL_FORMS");
+  const template = document.getElementById("empty-variant-template");
+
+  function slugify(value) {
+    return value
+      .toLowerCase()
+      .trim()
+      .replace(/[\s\W-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  if (slugInput) {
+    slugInput.dataset.userEdited = slugInput.value ? "1" : "0";
+    slugInput.addEventListener("input", function () {
+      slugInput.dataset.userEdited = "1";
+    });
+  }
+
+  if (nameInput && slugInput) {
+    nameInput.addEventListener("input", function () {
+      if (slugInput.dataset.userEdited !== "1") {
+        slugInput.value = slugify(nameInput.value);
+      }
+    });
+  }
+
+  if (addButton && container && totalForms && template) {
+    addButton.addEventListener("click", function () {
+      const formIndex = parseInt(totalForms.value, 10);
+      const html = template.innerHTML.replace(/__prefix__/g, formIndex);
+      container.insertAdjacentHTML("beforeend", html);
+      totalForms.value = formIndex + 1;
+    });
+  }
+});
+</script>
+{% endblock %}

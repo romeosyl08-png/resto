@@ -1,0 +1,28 @@
+.form-label {
+  font-size: .9rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.form-control,
+.form-select {
+  border-radius: .6rem;
+  border: 1px solid #e5e7eb;
+  transition: all .15s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+  box-shadow: none;
+  border-color: var(--bs-primary);
+}
+
+.card-clean {
+  border: 0;
+  border-radius: 1rem;
+}
+
+.card-soft {
+  background: #f8fafc;
+  border-radius: 1rem;
+}

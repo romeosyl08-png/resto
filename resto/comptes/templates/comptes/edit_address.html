@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Modifier une adresse - Chez Mama Jackie{% endblock %}
+{% block body_class %}page-address{% endblock %}
+
+{% block content %}
+<section class="container py-4 py-lg-5 address-shell">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <article class="card border-0 shadow-sm">
+        <div class="card-body p-4 p-lg-4">
+          <p class="section-kicker mb-2">Livraison</p>
+          <h1 class="h4 mb-3"><i class="bi bi-pencil"></i> Modifier une adresse</h1>
+
+          <form method="post" id="address-form" class="address-form">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="form-check mb-3">
+              {{ form.other }}
+              <label class="form-check-label" for="id_other">{{ form.other.label }}</label>
+              {% if form.other.errors %}
+                <div class="text-danger small mt-1">{{ form.other.errors }}</div>
+              {% endif %}
+            </div>
+
+            <div id="internal-address-fields">
+              <div class="mb-3">
+                <label for="id_room" class="form-label">{{ form.room.label }}</label>
+                {{ form.room }}
+                {% if form.room.errors %}
+                  <div class="text-danger small mt-1">{{ form.room.errors }}</div>
+                {% endif %}
+              </div>
+
+              <div class="mb-3">
+                <label for="id_sector" class="form-label">{{ form.sector.label }}</label>
+                {{ form.sector }}
+                {% if form.sector.errors %}
+                  <div class="text-danger small mt-1">{{ form.sector.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div id="other-address-field" class="mb-3" style="display: none;">
+              <label for="id_other_detail" class="form-label">{{ form.other_detail.label }}</label>
+              {{ form.other_detail }}
+              {% if form.other_detail.errors %}
+                <div class="text-danger small mt-1">{{ form.other_detail.errors }}</div>
+              {% endif %}
+              <div class="form-text"><i class="bi bi-info-circle"></i> Livraison Yango/Glovo a votre charge.</div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+              <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Enregistrer</button>
+              <a href="{% url 'comptes:profile' %}" class="btn btn-outline-secondary"><i class="bi bi-x-circle"></i> Annuler</a>
+            </div>
+          </form>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const otherCheckbox = document.getElementById('id_other');
+  const internalFields = document.getElementById('internal-address-fields');
+  const otherField = document.getElementById('other-address-field');
+  const roomSelect = document.getElementById('id_room');
+  const sectorSelect = document.getElementById('id_sector');
+
+  function toggleFields() {
+    if (!otherCheckbox || !internalFields || !otherField) return;
+
+    if (otherCheckbox.checked) {
+      internalFields.style.display = 'none';
+      otherField.style.display = 'block';
+      if (roomSelect) roomSelect.value = '';
+      if (sectorSelect) sectorSelect.value = '';
+    } else {
+      internalFields.style.display = 'block';
+      otherField.style.display = 'none';
+    }
+  }
+
+  toggleFields();
+  if (otherCheckbox) otherCheckbox.addEventListener('change', toggleFields);
+});
+</script>
+{% endblock %}

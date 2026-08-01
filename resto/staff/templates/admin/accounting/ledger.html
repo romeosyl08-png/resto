@@ -1,0 +1,372 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Livre de Compte{% endblock %}
+
+{% block content %}
+<!-- En-tête avec sélecteur de période -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div>
+        <h1 class="h3 mb-1 d-flex align-items-center gap-2">
+          <i class="bi bi-book"></i>
+          Livre de Compte
+        </h1>
+        <p class="text-muted mb-0">
+          <i class="bi bi-calendar-event"></i>
+          {{ period_label }}
+        </p>
+      </div>
+
+      <form method="get" class="d-flex gap-2 flex-wrap" style="min-width: 300px;">
+        <div class="input-group">
+          <span class="input-group-text bg-white">
+            <i class="bi bi-calendar3"></i>
+          </span>
+          <input type="date" name="date" class="form-control" value="{{ ref_date|date:'Y-m-d' }}">
+        </div>
+        
+        <select name="period" class="form-select">
+          <option value="day" {% if period == 'day' %}selected{% endif %}>Par jour</option>
+          <option value="week" {% if period == 'week' %}selected{% endif %}>Par semaine</option>
+          <option value="month" {% if period == 'month' %}selected{% endif %}>Par mois</option>
+          <option value="custom" {% if period == 'custom' %}selected{% endif %}>Personnalisée</option>
+        </select>
+
+        <div class="input-group">
+          <span class="input-group-text bg-white">du</span>
+          <input type="date" name="start_date" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+        </div>
+
+        <div class="input-group">
+          <span class="input-group-text bg-white">au</span>
+          <input type="date" name="end_date" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+        </div>
+        
+        <button class="btn btn-dark" type="submit">
+          <i class="bi bi-search"></i> Voir
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Cartes de statistiques principales -->
+<div class="row g-3 mb-4">
+  <!-- Revenus site -->
+  <div class="col-xl-3 col-md-6">
+    <div class="stat-card stat-card-primary">
+      <div class="stat-card-icon">
+        <i class="bi bi-shop"></i>
+      </div>
+      <div class="stat-card-content">
+        <div class="stat-card-label">Revenus du site</div>
+        <div class="stat-card-value">{{ site_revenue|floatformat:0 }}</div>
+        <div class="stat-card-unit">FCFA ({{ site_orders_count }} cmd)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Revenus hors site -->
+  <div class="col-xl-3 col-md-6">
+    <div class="stat-card stat-card-info">
+      <div class="stat-card-icon">
+        <i class="bi bi-truck"></i>
+      </div>
+      <div class="stat-card-content">
+        <div class="stat-card-label">Ventes hors site</div>
+        <div class="stat-card-value">{{ off_site_revenue|floatformat:0 }}</div>
+        <div class="stat-card-unit">FCFA ({{ off_site_sales_count }} ventes)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total revenus -->
+  <div class="col-xl-3 col-md-6">
+    <div class="stat-card stat-card-success">
+      <div class="stat-card-icon">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+      <div class="stat-card-content">
+        <div class="stat-card-label">Total Revenus</div>
+        <div class="stat-card-value">{{ total_revenue|floatformat:0 }}</div>
+        <div class="stat-card-unit">FCFA</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dépenses -->
+  <div class="col-xl-3 col-md-6">
+    <div class="stat-card stat-card-warning">
+      <div class="stat-card-icon">
+        <i class="bi bi-cash-coin"></i>
+      </div>
+      <div class="stat-card-content">
+        <div class="stat-card-label">Dépenses</div>
+        <div class="stat-card-value">{{ total_expenses|floatformat:0 }}</div>
+        <div class="stat-card-unit">FCFA</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Résultat -->
+  <div class="col-xl-3 col-md-6">
+    <div class="stat-card {% if result > 0 %}stat-card-success{% else %}stat-card-danger{% endif %}">
+      <div class="stat-card-icon">
+        <i class="bi bi-graph-up"></i>
+      </div>
+      <div class="stat-card-content">
+        <div class="stat-card-label">Résultat Net</div>
+        <div class="stat-card-value">{{ result|floatformat:0 }}</div>
+        <div class="stat-card-unit">FCFA</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Marge -->
+  <div class="col-xl-3 col-md-6">
+    <div class="stat-card stat-card-primary">
+      <div class="stat-card-icon">
+        <i class="bi bi-percent"></i>
+      </div>
+      <div class="stat-card-content">
+        <div class="stat-card-label">Marge (%)</div>
+        <div class="stat-card-value">{{ margin_pct|floatformat:1 }}%</div>
+        <div class="stat-card-unit">Rentabilité</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Boutons d'action -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'staff:add_expense' %}?next={{ current_path|urlencode }}" class="btn btn-outline-primary">
+        <i class="bi bi-plus-circle"></i> Ajouter Dépense
+      </a>
+      <a href="{% url 'staff:add_off_site_sale' %}?next={{ current_path|urlencode }}" class="btn btn-outline-success">
+        <i class="bi bi-plus-circle"></i> Ajouter Vente Hors Site
+      </a>
+      <a href="{% url 'staff:debt_list' %}" class="btn btn-outline-dark">
+        <i class="bi bi-journal-text"></i> Gérer Dettes
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Contenu principal en deux colonnes -->
+<div class="row g-4">
+  <!-- Colonne gauche: Détails quotidiens -->
+  <div class="col-lg-8">
+    <!-- Détails quotidiens -->
+    {% if daily_details %}
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light py-3">
+          <h5 class="mb-0">
+            <i class="bi bi-calendar-day"></i>
+            Détails {% if period == 'day' %}du jour{% elif period == 'week' %}hebdomadaires{% else %}mensuels{% endif %}
+          </h5>
+        </div>
+        <div class="card-body p-0">
+          {% for day_data in daily_details %}
+            {% if period != 'day' or forloop.first %}
+              <div class="daily-summary p-3 border-bottom">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <h6 class="mb-0 fw-600">{{ day_data.date|date:"l d F Y" }}</h6>
+                  <span class="badge bg-{% if day_data.result > 0 %}success{% else %}danger{% endif %}">
+                    {{ day_data.result|floatformat:0 }} FCFA
+                  </span>
+                </div>
+                
+                <div class="row text-sm">
+                  <div class="col-6">
+                    <small class="text-muted">Revenus site:</small>
+                    <div class="text-dark fw-500">{{ day_data.site_revenue|floatformat:0 }} FCFA</div>
+                  </div>
+                  <div class="col-6">
+                    <small class="text-muted">Hors site:</small>
+                    <div class="text-dark fw-500">{{ day_data.off_site_revenue|floatformat:0 }} FCFA</div>
+                  </div>
+                  <div class="col-6">
+                    <small class="text-muted">Total revenus:</small>
+                    <div class="text-dark fw-500">{{ day_data.total_revenue|floatformat:0 }} FCFA</div>
+                  </div>
+                  <div class="col-6">
+                    <small class="text-muted">Dépenses:</small>
+                    <div class="text-dark fw-500">{{ day_data.total_expenses|floatformat:0 }} FCFA</div>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Dépenses récentes -->
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="bi bi-receipt"></i>
+          Dépenses Récentes
+        </h5>
+        <a href="{% url 'staff:add_expense' %}?next={{ current_path|urlencode }}" class="btn btn-sm btn-primary">
+          <i class="bi bi-plus"></i> Ajouter
+        </a>
+      </div>
+      
+      {% if expenses %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th>
+                <th>Catégorie</th>
+                <th>Description</th>
+                <th>Montant</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for expense in expenses %}
+                <tr>
+                  <td>
+                    <small class="text-muted">{{ expense.date|date:"d/m/Y" }}</small>
+                  </td>
+                  <td>
+                    <span class="badge bg-secondary">{{ expense.get_category_display }}</span>
+                  </td>
+                  <td>
+                    <small>{{ expense.description }}</small>
+                  </td>
+                  <td>
+                    <strong>{{ expense.amount|floatformat:0 }} FCFA</strong>
+                  </td>
+                  <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                      <a href="{% url 'staff:edit_expense' expense.id %}" class="btn btn-outline-primary" title="Éditer">
+                        <i class="bi bi-pencil"></i>
+                      </a>
+                      <form method="post" action="{% url 'staff:delete_expense' expense.id %}" style="display: inline;" onsubmit="return confirm('Confirmer la suppression?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ current_path }}">
+                        <button type="submit" class="btn btn-outline-danger" title="Supprimer">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="p-4 text-center text-muted">
+          <i class="bi bi-inbox" style="font-size: 2rem; opacity: 0.5;"></i>
+          <p class="mt-2">Aucune dépense pour cette période</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Colonne droite: Dépenses par catégorie et ventes hors site -->
+  <div class="col-lg-4">
+    <!-- Dépenses par catégorie -->
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-header bg-light py-3">
+        <h5 class="mb-0">
+          <i class="bi bi-pie-chart"></i>
+          Dépenses par Catégorie
+        </h5>
+      </div>
+      
+      {% if expenses_by_category %}
+        <div class="list-group list-group-flush">
+          {% for cat in expenses_by_category %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+              <span>{{ cat.label|default:"Sans catégorie" }}</span>
+              <span class="badge bg-warning">{{ cat.total|floatformat:0 }} FCFA</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="p-3 text-center text-muted">
+          <small>Aucune dépense</small>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Ventes hors site récentes -->
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+          <i class="bi bi-bag-check"></i>
+          Ventes Hors Site
+        </h5>
+        <a href="{% url 'staff:add_off_site_sale' %}?next={{ current_path|urlencode }}" class="btn btn-sm btn-success">
+          <i class="bi bi-plus"></i> Ajouter
+        </a>
+      </div>
+      
+      {% if off_site_sales %}
+        <div class="list-group list-group-flush">
+          {% for sale in off_site_sales %}
+            <div class="list-group-item">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                  <h6 class="mb-1">{{ sale.description }}</h6>
+                  <small class="text-muted">
+                    {{ sale.date|date:"d/m/Y" }} • {{ sale.get_payment_method_display }}
+                  </small>
+                </div>
+                <div class="text-end">
+                  <div class="fw-600 text-success">{{ sale.amount|floatformat:0 }} FCFA</div>
+                  <div class="btn-group btn-group-sm mt-2" role="group">
+                    <a href="{% url 'staff:edit_off_site_sale' sale.id %}" class="btn btn-outline-primary" title="Éditer">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="post" action="{% url 'staff:delete_off_site_sale' sale.id %}" style="display: inline;" onsubmit="return confirm('Confirmer la suppression?');">
+                      {% csrf_token %}
+                      <input type="hidden" name="next" value="{{ current_path }}">
+                      <button type="submit" class="btn btn-outline-danger" title="Supprimer">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="p-4 text-center text-muted">
+          <i class="bi bi-inbox" style="font-size: 2rem; opacity: 0.5;"></i>
+          <p class="mt-2">Aucune vente hors site</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+  .daily-summary {
+    background: #f8f9fa;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+  }
+  
+  .daily-summary:hover {
+    background: #e9ecef;
+  }
+  
+  .text-sm {
+    font-size: 0.875rem;
+  }
+  
+  .text-sm .stat-card-unit {
+    font-size: 0.75rem;
+  }
+</style>
+{% endblock %}

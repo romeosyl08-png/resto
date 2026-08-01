@@ -1,0 +1,67 @@
+/* Desktop enhancements */
+@media (min-width: 992px) {
+  .bottom-nav,
+  .install-fab {
+    display: none !important;
+  }
+
+  #push-popup {
+    bottom: 18px;
+    right: 18px;
+  }
+
+  .main-content {
+    padding-top: 2.2rem;
+    padding-bottom: 3rem;
+  }
+
+  .menu-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.2rem;
+  }
+
+  .weekly-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.2rem;
+  }
+
+  .meal-main-image {
+    min-height: 520px;
+  }
+
+  .meal-order-card .card-body {
+    padding: 2rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .menu-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.3rem;
+  }
+
+  .weekly-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .meal-detail-shell {
+    max-width: 1260px;
+    margin-inline: auto;
+  }
+
+  .meal-order-card {
+    position: sticky;
+    top: 100px;
+  }
+}
+
+@media (min-width: 992px) {
+  .page-orders .order-summary-card {
+    position: sticky;
+    top: 104px;
+  }
+
+  .page-profile .profile-main-card {
+    min-height: 420px;
+  }
+}

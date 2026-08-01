@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Panier - Chez Mama Jackie{% endblock %}
+{% block body_class %}page-cart page-orders{% endblock %}
+
+{% block content %}
+<section class="container py-4 py-lg-5 orders-shell">
+  <header class="section-head mb-4">
+    <p class="section-kicker mb-2">Commande</p>
+    <h1 class="mb-2">Votre panier</h1>
+    <p class="section-subtitle mb-0">Verifiez vos plats, ajustez les supplements et finalisez rapidement.</p>
+  </header>
+
+  <div class="row g-4 align-items-start">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4 p-lg-4">
+          {% if promo_msg %}
+            <div class="alert {% if promo_ok %}alert-success{% else %}alert-danger{% endif %} py-2 mb-3">
+              {{ promo_msg }}
+            </div>
+          {% endif %}
+
+          {% if cart_summary.count > 0 %}
+            <div class="vstack gap-3">
+              {% for item in cart %}
+                <article class="cart-item card border-0 shadow-sm">
+                  <div class="card-body">
+                    <div class="cart-item-top">
+                      <div>
+                        <h2 class="h6 mb-1">{{ item.meal.name }}</h2>
+                        <p class="small text-muted mb-2">
+                          Variante: {{ item.variant_code|default:"standard" }}
+                          <br>
+                          Quantite: {{ item.quantity }} x {{ item.unit_price }} FCFA
+                        </p>
+
+                        {% if item.supplements %}
+                          <form class="cart-supp-form" method="post" action="{% url 'orders:cart_update_supplements' item.meal_id item.variant_code %}">
+                            {% csrf_token %}
+                            <div class="vstack gap-2">
+                              {% for sup in item.supplements %}
+                                <div class="supp-line">
+                                  <input type="hidden" name="supplements" value="{{ sup.id }}">
+                                  <div class="supp-name small">{{ sup.name }}</div>
+                                  <div class="supp-controls">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-qty" data-target="sup-{{ item.meal_id }}-{{ sup.id }}" data-delta="-1" aria-label="Diminuer">-</button>
+                                    <input type="number"
+                                           id="sup-{{ item.meal_id }}-{{ sup.id }}"
+                                           name="qty_{{ sup.id }}"
+                                           value="{{ sup.quantity }}"
+                                           min="1"
+                                           max="20"
+                                           class="form-control form-control-sm text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-qty" data-target="sup-{{ item.meal_id }}-{{ sup.id }}" data-delta="1" aria-label="Augmenter">+</button>
+                                  </div>
+                                  <div class="small text-muted text-nowrap">{{ sup.unit_price }} FCFA</div>
+                                </div>
+                              {% endfor %}
+                            </div>
+                            <button type="submit" class="btn btn-sm btn-dark mt-2">Mettre a jour</button>
+                          </form>
+                        {% endif %}
+                      </div>
+
+                      <div class="cart-total text-end">
+                        <div class="fw-bold fs-5">{{ item.total_price }} FCFA</div>
+                        <div class="text-muted small">total</div>
+                      </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                      <a class="btn btn-sm btn-outline-secondary" href="{% url 'shop:meal_detail' item.meal.slug %}">Details</a>
+                      <a class="btn btn-sm btn-outline-danger" href="{% url 'orders:cart_remove' item.meal_id item.variant_code %}">Retirer</a>
+                    </div>
+                  </div>
+                </article>
+              {% endfor %}
+            </div>
+
+            <div class="promo-panel card border-0 mt-4">
+              <div class="card-body">
+                <h2 class="h6 mb-3">Code promo</h2>
+
+                {% if cart_summary.promo_code %}
+                  <div class="alert alert-success d-flex justify-content-between align-items-center py-2 mb-0 gap-2">
+                    <span>
+                      <i class="bi bi-tag-fill"></i>
+                      Code <strong>{{ cart_summary.promo_code }}</strong> applique
+                    </span>
+                    <form method="post" action="{% url 'orders:cart_remove_promo' %}" class="mb-0">
+                      {% csrf_token %}
+                      <button class="btn btn-sm btn-outline-secondary">Retirer</button>
+                    </form>
+                  </div>
+                {% else %}
+                  <form method="post" action="{% url 'orders:cart_apply_promo' %}" class="d-flex gap-2 flex-wrap">
+                    {% csrf_token %}
+                    <input type="text" name="promo_code" class="form-control flex-grow-1" placeholder="Entrez votre code promo" required>
+                    <button class="btn btn-dark" type="submit">Appliquer</button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+
+          {% else %}
+            <article class="empty-cart text-center py-5">
+              <i class="bi bi-cart-x empty-state-icon"></i>
+              <h2 class="h4 mt-3 mb-2">Votre panier est vide</h2>
+              <p class="text-muted mb-4">Ajoutez un plat pour continuer votre commande.</p>
+              <a href="{% url 'shop:meal_list' %}" class="btn btn-primary">Voir le menu</a>
+            </article>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <aside class="order-summary-mobile order-summary-card card border-0 shadow-sm">
+        <div class="card-body">
+          <h2 class="h6 fw-bold mb-3">Resume de la commande</h2>
+
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Articles ({{ cart_summary.count }})</span>
+            <span class="fw-semibold">{{ cart_summary.subtotal }} FCFA</span>
+          </div>
+
+          {% if cart_summary.has_discount %}
+            <div class="d-flex justify-content-between mb-2 text-success">
+              <span><i class="bi bi-tag-fill"></i> Remise</span>
+              <span class="fw-semibold">- {{ cart_summary.discount }} FCFA</span>
+            </div>
+          {% endif %}
+
+          <hr class="my-3">
+
+          <div class="d-flex justify-content-between mb-3 align-items-center">
+            <span class="fw-bold">Total a payer</span>
+            <span class="fw-bold fs-5 text-primary">{{ cart_summary.total }} FCFA</span>
+          </div>
+
+          {% if cart_summary.count > 0 %}
+            <a class="btn btn-primary w-100 mb-2" href="{% url 'orders:checkout' %}">
+              <i class="bi bi-check-circle"></i>
+              Passer commande
+            </a>
+          {% endif %}
+
+          <a class="btn btn-outline-secondary w-100" href="{% url 'shop:meal_list' %}">
+            <i class="bi bi-arrow-left"></i>
+            Continuer mes achats
+          </a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<script>
+(function() {
+  const clamp = (val, min, max) => Math.min(max, Math.max(min, val));
+  document.querySelectorAll('.btn-qty').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = document.getElementById(btn.dataset.target);
+      if (!target) return;
+      const delta = parseInt(btn.dataset.delta || '0', 10);
+      const min = parseInt(target.min || '1', 10);
+      const max = parseInt(target.max || '99', 10);
+      let current = parseInt(target.value || min, 10);
+      if (Number.isNaN(current)) current = min;
+      target.value = clamp(current + delta, min, max);
+    });
+  });
+})();
+</script>
+{% endblock %}

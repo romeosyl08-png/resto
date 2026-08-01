@@ -1,0 +1,106 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Parrainage – Admin Resto{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+      <h1 class="h3 mb-0">
+        <i class="bi bi-gift"></i> Dashboard Parrainage
+      </h1>
+      <a href="{% url 'staff:admin_dashboard' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Retour au dashboard
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats rapides -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-muted small mb-1">Parrains actifs</div>
+          <div class="h4 mb-0 text-primary">{{ stats.sponsors_count }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-muted small mb-1">Filleuls</div>
+          <div class="h4 mb-0 text-info">{{ stats.total_referrals }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-muted small mb-1">Livraisons validées</div>
+          <div class="h4 mb-0 text-success">{{ stats.delivered_referrals }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-muted small mb-1">Repas gratuits</div>
+          <div class="h4 mb-0 text-warning">{{ stats.free_meals }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Liste des parrains -->
+  <div class="card shadow-sm">
+    <div class="card-header">
+      <i class="bi bi-people"></i> Liste des parrains
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Parrain</th>
+            <th>Code</th>
+            <th class="text-center">Filleuls</th>
+            <th class="text-center">Livraisons</th>
+            <th class="text-center">Repas gratuits</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in sponsors %}
+            <tr>
+              <td class="fw-semibold">
+                {{ p.user.username }}
+              </td>
+              <td>
+                <span class="badge bg-secondary">{{ p.referral_code }}</span>
+              </td>
+              <td class="text-center">
+                <span class="badge bg-info">{{ p.total_referrals }}</span>
+              </td>
+              <td class="text-center">
+                <span class="badge bg-success">{{ p.delivered_referrals }}</span>
+              </td>
+              <td class="text-center">
+                <span class="badge bg-warning text-dark">{{ p.free_meals }}</span>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <i class="bi bi-inbox"></i>
+                  <p class="text-muted mb-0">Aucun parrain actif</p>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

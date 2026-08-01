@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if meal %}{{ meal.name }} - Chez Mama Jackie{% else %}Menu du jour - Chez Mama Jackie{% endif %}
+{% endblock %}
+
+{% block content %}
+<section class="container py-4 py-lg-5">
+{% if meal %}
+  <article class="meal-detail-shell" itemscope itemtype="https://schema.org/MenuItem">
+    <div class="row g-4 align-items-stretch">
+      <div class="col-lg-7">
+        <div class="card meal-visual-card h-100 border-0 shadow-lg overflow-hidden position-relative">
+          {% if meal.image %}
+            <img id="meal-main-image" src="{{ meal.image.url }}" class="meal-main-image" alt="{{ meal.name }}" itemprop="image" loading="lazy">
+          {% else %}
+            <img id="meal-main-image" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1400&q=80" class="meal-main-image" alt="{{ meal.name }}" loading="lazy">
+          {% endif %}
+
+          <div class="meal-visual-overlay">
+            <span class="chip chip-soft" itemprop="menuAddOn">{{ meal.category.name }}</span>
+            {% if ui.badge %}
+              <span class="badge {{ ui.badge_class }} fs-6">{{ ui.badge }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="card meal-order-card border-0 shadow-lg h-100">
+          <div class="card-body p-4 p-xl-5 d-flex flex-column gap-3">
+            <header>
+              <p class="section-kicker mb-2">Plat du jour</p>
+              <h1 class="h2 mb-2" itemprop="name">{{ meal.name }}</h1>
+
+              {% if ui.message %}
+                <div class="status-hint mt-3" role="status" aria-live="polite">
+                  <i class="bi bi-clock"></i>
+                  {{ ui.message }}
+                </div>
+              {% endif %}
+
+              <div class="text-muted small mt-3">
+                Commandes jusqu'a <time datetime="{{ cutoff_time|time:'H:i' }}">{{ cutoff_time|time:"H:i" }}</time>
+              </div>
+            </header>
+
+            <p class="meal-description mb-0" itemprop="description">
+              {{ meal.description|default:"Un plat genereux prepare avec soin par Mama Jackie." }}
+            </p>
+
+            <form method="post" action="{% url 'orders:cart_add' meal.id %}" class="meal-order-form mt-2" aria-label="Formulaire de commande">
+              {% csrf_token %}
+
+              <fieldset class="option-section">
+                <legend class="h6 fw-bold mb-3">Choisir votre formule</legend>
+                <div class="variant-grid" role="radiogroup" aria-label="Formules disponibles">
+                  {% for v in variants %}
+                    <label class="variant-pill {% if v.stock <= 0 %}is-disabled{% endif %}">
+                      <input type="radio"
+                             name="variant"
+                             value="{{ v.code }}"
+                             data-image-url="{% if v.image %}{{ v.image.url }}{% elif meal.image %}{{ meal.image.url }}{% else %}https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1400&q=80{% endif %}"
+                             {% if forloop.first %}checked{% endif %}
+                             {% if v.stock <= 0 %}disabled{% endif %}
+                             aria-label="{{ v.label }} - {{ v.price }} FCFA {% if v.stock <= 0 %}(Epuise){% endif %}">
+
+                      <span class="variant-title-row">
+                        <span class="variant-name">{{ v.label }}</span>
+                        {% if v.stock <= 0 %}<span class="stock-pill">Epuise</span>{% endif %}
+                      </span>
+
+                      <span class="variant-price" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                        <span itemprop="price">{{ v.price }}</span>
+                        <span itemprop="priceCurrency" content="XOF">FCFA</span>
+                      </span>
+                    </label>
+                  {% endfor %}
+                </div>
+              </fieldset>
+
+              {% if supplements %}
+              <fieldset class="option-section mt-4">
+                <legend class="h6 fw-bold mb-3">Suppléments (optionnels)</legend>
+                {% if supplements_by_type %}
+                  {% for group in supplements_by_type %}
+                    <div class="supplements-group-title mb-2">{{ group.label }}</div>
+                    <div class="variant-grid mb-3" role="group" aria-label="Suppléments disponibles - {{ group.label }}">
+                      {% for s in group.items %}
+                        <label class="variant-pill supplement-pill {% if s.stock <= 0 %}is-disabled{% endif %}">
+                          <input type="checkbox"
+                                name="supplements"
+                                value="{{ s.id }}"
+                                {% if s.stock <= 0 %}disabled{% endif %}
+                                aria-label="{{ s.name }} - {{ s.price }} FCFA en plus"
+                                data-target="supp-qty-{{ s.id }}">
+
+                          {% if s.image %}
+                            <img src="{{ s.image.url }}" alt="{{ s.name }}" class="supplement-img" loading="lazy">
+                          {% else %}
+                            <img src="https://images.unsplash.com/photo-1526318472351-c75fcf070305?auto=format&fit=crop&w=300&q=80" alt="{{ s.name }}" class="supplement-img" loading="lazy">
+                          {% endif %}
+
+                          <span class="variant-title-row">
+                            <span class="variant-name">{{ s.name }}</span>
+                            {% if s.stock <= 0 %}<span class="stock-pill">Epuise</span>{% endif %}
+                          </span>
+
+                          <span class="variant-price">+{{ s.price }} FCFA</span>
+
+                          <div class="supp-qty">
+                            <button type="button" class="btn-qty" data-target="supp-qty-{{ s.id }}" data-delta="-1" aria-label="Diminuer">-</button>
+                            <input type="number"
+                                  id="supp-qty-{{ s.id }}"
+                                  name="qty_{{ s.id }}"
+                                  value="0"
+                                  min="0"
+                                  max="{{ s.stock|default:9 }}"
+                                  class="form-control form-control-sm text-center">
+                            <button type="button" class="btn-qty" data-target="supp-qty-{{ s.id }}" data-delta="1" aria-label="Augmenter">+</button>
+                          </div>
+                        </label>
+                      {% endfor %}
+                    </div>
+                  {% endfor %}
+                {% else %}
+                  <div class="variant-grid" role="group" aria-label="Suppléments disponibles">
+                    {% for s in supplements %}
+                      <label class="variant-pill supplement-pill {% if s.stock <= 0 %}is-disabled{% endif %}">
+                        <input type="checkbox"
+                              name="supplements"
+                              value="{{ s.id }}"
+                              {% if s.stock <= 0 %}disabled{% endif %}
+                              aria-label="{{ s.name }} - {{ s.price }} FCFA en plus"
+                              data-target="supp-qty-{{ s.id }}">
+
+                        {% if s.image %}
+                          <img src="{{ s.image.url }}" alt="{{ s.name }}" class="supplement-img" loading="lazy">
+                        {% else %}
+                          <img src="https://images.unsplash.com/photo-1526318472351-c75fcf070305?auto=format&fit=crop&w=300&q=80" alt="{{ s.name }}" class="supplement-img" loading="lazy">
+                        {% endif %}
+
+                        <span class="variant-title-row">
+                          <span class="variant-name">{{ s.name }}</span>
+                          {% if s.stock <= 0 %}<span class="stock-pill">Epuise</span>{% endif %}
+                        </span>
+
+                        <span class="variant-price">+{{ s.price }} FCFA</span>
+
+                        <div class="supp-qty">
+                          <button type="button" class="btn-qty" data-target="supp-qty-{{ s.id }}" data-delta="-1" aria-label="Diminuer">-</button>
+                          <input type="number"
+                                id="supp-qty-{{ s.id }}"
+                                name="qty_{{ s.id }}"
+                                value="0"
+                                min="0"
+                                max="{{ s.stock|default:9 }}"
+                                class="form-control form-control-sm text-center">
+                          <button type="button" class="btn-qty" data-target="supp-qty-{{ s.id }}" data-delta="1" aria-label="Augmenter">+</button>
+                        </div>
+                      </label>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </fieldset>
+              {% endif %}
+
+              <button type="submit" class="btn btn-dark btn-lg w-100 mt-4" {% if not ui.can_order %}disabled aria-disabled="true"{% endif %} aria-label="Ajouter {{ meal.name }} au panier">
+                <i class="bi bi-cart3"></i>
+                {{ ui.button|default:"Ajouter au panier" }}
+              </button>
+            </form>
+
+            <details class="meal-details mt-2">
+              <summary>Informations complémentaires</summary>
+              <ul class="list-unstyled small mt-3 mb-0">
+                {% with std=variants|first %}
+                  {% if std %}
+                    <li><strong>Prix :</strong> a partir de {{ std.price }} FCFA</li>
+                  {% endif %}
+                {% endwith %}
+                <li><strong>Categorie :</strong> {{ meal.category.name }}</li>
+                <li><strong>Fermeture commandes :</strong> {{ cutoff_time|time:"H:i" }}</li>
+                <li>
+                  <strong>Disponibilite :</strong>
+                  {% if ui.can_order %}
+                    <span class="text-success">Disponible</span>
+                  {% else %}
+                    <span class="text-danger">Indisponible</span>
+                  {% endif %}
+                </li>
+              </ul>
+            </details>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+{% elif meals %}
+  <header class="section-head mb-4">
+    <p class="section-kicker mb-2">Chez Mama Jackie</p>
+    <h1 class="mb-2">Menu du jour</h1>
+    <p class="section-subtitle mb-0">Choisissez votre plat du moment et passez commande en quelques secondes.</p>
+  </header>
+
+  <nav class="menu-filters mb-4" aria-label="Filtrer par categorie">
+    <a class="chip-btn {% if not category %}is-active{% endif %}" href="{% url 'shop:meal_list' %}" {% if not category %}aria-current="page"{% endif %}>Tout</a>
+    {% for c in categories %}
+      <a class="chip-btn {% if category == c.slug %}is-active{% endif %}" href="{% url 'shop:meal_list_by_category' c.slug %}" {% if category == c.slug %}aria-current="page"{% endif %}>{{ c.name }}</a>
+    {% endfor %}
+  </nav>
+
+  <div class="menu-grid" role="list">
+    {% for meal in meals %}
+      <article class="card meal-card border-0 shadow-sm" role="listitem" itemscope itemtype="https://schema.org/MenuItem">
+        <a href="{% url 'shop:meal_detail' meal.slug %}" class="meal-card-media" aria-label="Voir {{ meal.name }}">
+          {% if meal.image %}
+            <img src="{{ meal.image.url }}" class="meal-img" alt="{{ meal.name }}" itemprop="image" loading="lazy">
+          {% else %}
+            <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80" class="meal-img" alt="{{ meal.name }}" loading="lazy">
+          {% endif %}
+        </a>
+
+        <div class="card-body d-flex flex-column gap-3">
+          <header class="meal-card-head">
+            <h2 class="h5 mb-0">
+              <a class="meal-card-link stretched-link" href="{% url 'shop:meal_detail' meal.slug %}" itemprop="url">
+                <span itemprop="name">{{ meal.name }}</span>
+              </a>
+            </h2>
+            <span class="price-pill" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+              <span itemprop="price">{{ meal.price }}</span>
+              <span itemprop="priceCurrency" content="XOF">FCFA</span>
+            </span>
+          </header>
+
+          <p class="text-muted small mb-0" itemprop="description">
+            {{ meal.description|default:"Un délicieux plat preparé avec soin."|truncatechars:120 }}
+          </p>
+
+          <div class="d-flex gap-2 mt-auto">
+            <a class="btn btn-outline-secondary flex-fill" href="{% url 'shop:meal_detail' meal.slug %}" aria-label="Voir les details de {{ meal.name }}">Details</a>
+            <a class="btn btn-primary flex-fill" href="{% url 'shop:meal_detail' meal.slug %}" aria-label="Commander {{ meal.name }}">Commander</a>
+          </div>
+        </div>
+      </article>
+    {% empty %}
+      <article class="card empty-state-card border-0">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-calendar2-x empty-state-icon"></i>
+          <h2 class="h4 mt-3 mb-2">Aucun plat disponible</h2>
+          <p class="text-muted mb-4">Le menu du jour n'est pas encore prêt. Revenez dans quelques instants.</p>
+          <a href="{% url 'shop:meal_list' %}" class="btn btn-primary">Actualiser la page</a>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <article class="card empty-state-card border-0">
+    <div class="card-body text-center py-5">
+      <i class="bi bi-hourglass-split empty-state-icon"></i>
+      <h2 class="h4 mt-3 mb-2">Aucun plat disponible</h2>
+      <p class="text-muted mb-4">Le menu du jour n'est pas encore prêt. Revenez dans quelques instants.</p>
+      <a href="{% url 'shop:meal_list' %}" class="btn btn-primary">Actualiser la page</a>
+    </div>
+  </article>
+{% endif %}
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const forms = document.querySelectorAll('form[action*="cart_add"]');
+
+  forms.forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      const variantSelected = form.querySelector('input[name="variant"]:checked');
+
+      if (!variantSelected) {
+        event.preventDefault();
+        alert('Veuillez selectionner une formule avant d\'ajouter au panier.');
+        return false;
+      }
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Ajout en cours...';
+        submitBtn.disabled = true;
+      }
+    });
+  });
+
+  const clamp = function (value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  };
+
+  document.querySelectorAll('.btn-qty').forEach(function (button) {
+    button.addEventListener('click', function () {
+      const target = document.getElementById(button.dataset.target);
+      if (!target) return;
+
+      const delta = parseInt(button.dataset.delta || '0', 10);
+      const min = parseInt(target.min || '0', 10);
+      const max = parseInt(target.max || '99', 10);
+      let current = parseInt(target.value || '0', 10);
+      if (Number.isNaN(current)) current = min;
+
+      const next = clamp(current + delta, min, max);
+      target.value = next;
+
+      const option = target.closest('.variant-pill');
+      if (!option) return;
+      const checkbox = option.querySelector('input[type="checkbox"]');
+      if (!checkbox) return;
+
+      checkbox.checked = next > 0;
+      if (!checkbox.checked) {
+        target.value = 0;
+      } else if (next === 0) {
+        target.value = 1;
+      }
+    });
+  });
+
+  document.querySelectorAll('.variant-pill input[type="checkbox"][data-target]').forEach(function (checkbox) {
+    checkbox.addEventListener('change', function () {
+      const target = document.getElementById(checkbox.dataset.target);
+      if (!target) return;
+
+      if (checkbox.checked && parseInt(target.value || '0', 10) === 0) {
+        target.value = Math.max(1, parseInt(target.min || '1', 10));
+      }
+
+      if (!checkbox.checked) {
+        target.value = 0;
+      }
+    });
+  });
+
+  document.querySelectorAll('.variant-pill input[type="radio"][name="variant"]').forEach(function (radio) {
+    radio.addEventListener('change', function () {
+      const imageUrl = radio.dataset.imageUrl;
+      const mainImage = document.getElementById('meal-main-image');
+      if (!mainImage || !imageUrl) return;
+
+      mainImage.style.opacity = '0.45';
+      setTimeout(function () {
+        mainImage.src = imageUrl;
+        mainImage.style.opacity = '1';
+      }, 130);
+    });
+  });
+});
+</script>
+{% endblock %}

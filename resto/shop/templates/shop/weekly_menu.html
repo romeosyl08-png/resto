@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Menu de la semaine - Chez Mama Jackie{% endblock %}
+
+{% block content %}
+<section class="container py-4 py-lg-5">
+  <header class="section-head mb-4 mb-lg-5">
+    <p class="section-kicker mb-2">Planning cuisine</p>
+    <h1 class="mb-2">Menu de la semaine</h1>
+    <p class="section-subtitle mb-0">Un aperçu clair des plats prévus sur les prochains jours.</p>
+  </header>
+
+  {% if week_menu %}
+    <div class="weekly-grid">
+      {% for day in week_menu.values %}
+        <article class="card week-card border-0 shadow-sm">
+          <div class="card-body p-4">
+            <header class="week-card-head mb-3">
+              <h2 class="h5 mb-0">{{ day.label }}</h2>
+              <span class="week-card-date">{{ day.date|date:"d/m" }}</span>
+            </header>
+
+            <ul class="week-meal-list list-unstyled mb-0">
+              {% for meal in day.meals %}
+                <li class="week-meal-item">
+                  <a href="{% url 'shop:meal_detail' meal.slug %}" class="week-meal-link">
+                    <span class="week-meal-title">{{ meal.name }}</span>
+                    <span class="week-meal-meta">{{ meal.description|default:"Plat du jour préparé par Mama Jackie."|truncatechars:90 }}</span>
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <article class="card empty-state-card border-0">
+      <div class="card-body text-center py-5">
+        <i class="bi bi-calendar2-x empty-state-icon"></i>
+        <h2 class="h4 mt-3 mb-2">Aucun plat prévu cette semaine</h2>
+        <p class="text-muted mb-4">Le prochain menu sera publié très bientôt.</p>
+        <a href="{% url 'shop:meal_list' %}" class="btn btn-primary">Voir le menu du jour</a>
+      </div>
+    </article>
+  {% endif %}
+</section>
+{% endblock %}

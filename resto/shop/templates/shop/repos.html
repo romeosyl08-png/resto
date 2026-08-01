@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Fermeture exceptionnelle - Chez Mama Jackie{% endblock %}
+
+{% block body_class %}page-closed{% endblock %}
+
+{% block content %}
+<section class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <article class="card closed-state border-0 shadow-sm text-center">
+        <div class="card-body p-4 p-lg-5">
+          <div class="closed-icon mb-3">
+            <i class="bi bi-cone-striped"></i>
+          </div>
+
+          <p class="section-kicker mb-2">Information</p>
+          <h1 class="h3 mb-3 fw-bold">Fermeture exceptionnelle ce lundi</h1>
+
+          <p class="lead mb-3">Notre cuisinier n'est pas disponible aujourd'hui.</p>
+
+          <p class="text-muted mb-4">
+            Les livraisons sont temporairement fermées pour la journée.
+            Nous reprenons nos activités dès demain aux horaires habituels.
+          </p>
+
+          <div class="d-flex flex-wrap justify-content-center gap-2">
+            <a href="{% url 'shop:meal_list' %}" class="btn btn-primary">Voir le menu</a>
+            <a href="{% url 'shop:weekly_menu' %}" class="btn btn-outline-secondary">Menu de la semaine</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+{% endblock %}

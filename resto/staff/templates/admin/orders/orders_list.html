@@ -1,0 +1,393 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Toutes les Commandes – Admin Resto{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  
+  <!-- En-tête avec stats -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0">📦 Gestion des Commandes</h1>
+        <a href="{% url 'staff:admin_dashboard' %}" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left"></i> Retour au dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-2 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-muted small mb-1">Total</div>
+          <div class="h4 mb-0 text-primary">{{ stats.total_count }}</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-2 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-muted small mb-1">CA Total</div>
+          <div class="h6 mb-0 text-success">{{ stats.total_revenue }} F</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-2 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-muted small mb-1">⏳ En attente</div>
+          <div class="h5 mb-0 text-warning">{{ stats.pending_count }}</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-2 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-muted small mb-1">✓ Confirmées</div>
+          <div class="h5 mb-0 text-info">{{ stats.confirmed_count }}</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-2 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-muted small mb-1">✓✓ Livrées</div>
+          <div class="h5 mb-0 text-success">{{ stats.delivered_count }}</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-2 col-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-muted small mb-1">✗ Annulées</div>
+          <div class="h5 mb-0 text-danger">{{ stats.canceled_count }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <form method="get" class="row g-3">
+        
+        <div class="col-md-3">
+          <label class="form-label small fw-bold">Recherche</label>
+          <input type="text" 
+                 name="search" 
+                 class="form-control" 
+                 placeholder="ID, nom, téléphone..." 
+                 value="{{ search }}">
+        </div>
+        
+        <div class="col-md-2">
+          <label class="form-label small fw-bold d-block">Statut</label>
+          <div class="border rounded p-2 bg-light" style="max-height: 160px; overflow-y: auto;">
+            {% for value, label in status_choices %}
+              <div class="form-check mb-1">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  name="status"
+                  value="{{ value }}"
+                  id="status_{{ value }}"
+                  {% if value in status_filter %}checked{% endif %}
+                >
+                <label class="form-check-label small" for="status_{{ value }}">
+                  {{ label }}
+                </label>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        
+        
+        <div class="col-md-2">
+          <label class="form-label small fw-bold">Du</label>
+          <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+        </div>
+        
+        <div class="col-md-2">
+          <label class="form-label small fw-bold">Au</label>
+          <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+        </div>
+        
+        <div class="col-md-3 d-flex align-items-end gap-2">
+          <button type="submit" class="btn btn-primary flex-grow-1">
+            <i class="bi bi-search"></i> Filtrer
+          </button>
+          <a href="{% url 'staff:admin_orders_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-x"></i>
+          </a>
+        </div>
+        
+      </form>
+    </div>
+  </div>
+
+  <!-- Liste des commandes -->
+  <div class="row">
+    <div class="col-12">
+      {% for order in orders %}
+        <div class="card border-0 shadow-sm mb-3">
+          <div class="card-body">
+            
+            <!-- En-tête de commande -->
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                  <h5 class="mb-0">
+                    <a href="{% url 'staff:admin_order_detail' order.id %}" 
+                       class="text-decoration-none">
+                      Commande #{{ order.id }}
+                    </a>
+                  </h5>
+                  
+                  {% if order.status == "pending" %}
+                    <span class="badge bg-warning text-dark">⏳ En attente</span>
+                  {% elif order.status == "confirmed" %}
+                    <span class="badge bg-info">✓ Confirmée</span>
+                  {% elif order.status == "delivered" %}
+                    <span class="badge bg-success">✓✓ Livrée</span>
+                  {% elif order.status == "canceled" %}
+                    <span class="badge bg-danger">✗ Annulée</span>
+                  {% endif %}
+                  
+                  {% if order.loyalty_reward == "free_meal" %}
+                    <span class="badge bg-success">🎁 Plat gratuit</span>
+                  {% elif order.loyalty_reward == "discount_500" %}
+                    <span class="badge bg-success">🏷️ Réduction 500</span>
+                  {% endif %}
+                  
+                  {% if order.promo_code %}
+                    <span class="badge bg-primary">🏷️ {{ order.promo_code }}</span>
+                  {% endif %}
+                </div>
+                
+                <div class="text-muted small">
+                  📅 {{ order.created_at|date:"d/m/Y à H:i" }}
+                </div>
+              </div>
+              
+              <div class="col-md-4 text-md-end">
+                <div class="h4 mb-0 text-primary">{{ order.total }} FCFA</div>
+                {% if order.discount_total > 0 %}
+                  <div class="small text-success">
+                    Remise : -{{ order.discount_total }} FCFA
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Infos client -->
+            <div class="row mb-3 pb-3 border-bottom">
+              <div class="col-md-4">
+                <div class="small fw-bold text-muted mb-1">👤 CLIENT</div>
+                <div class="fw-semibold">{{ order.customer_name }}</div>
+                {% if order.user %}
+                  <div class="small">
+                    <a href="{% url 'staff:admin_user_detail' order.user.id %}" 
+                       class="text-decoration-none">
+                      @{{ order.user.username }}
+                    </a>
+                  </div>
+                {% endif %}
+              </div>
+              
+              <div class="col-md-4">
+                <div class="small fw-bold text-muted mb-1">📞 TÉLÉPHONE</div>
+                <div>{{ order.phone }}</div>
+              </div>
+              
+              <div class="col-md-4">
+                <div class="small fw-bold text-muted mb-1">📍 ADRESSE</div>
+                <div class="small">{{ order.address|truncatewords:10 }}</div>
+                {% if order.address_detail %}
+                  <div class="small text-muted">{{ order.address_detail }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Items de commande -->
+            <div class="mb-3">
+              <div class="small fw-bold text-muted mb-2">📦 ARTICLES COMMANDÉS</div>
+              
+              {% for item in order.items.all %}
+                <div class="card bg-light border-0 mb-2">
+                  <div class="card-body py-2">
+                    <div class="row align-items-center">
+                      
+                      <div class="col-md-4">
+                        <div class="fw-semibold">{{ item.meal.name }}</div>
+                        <div class="small text-muted">
+                          Variante: <span class="badge bg-secondary">{{ item.variant_code }}</span>
+                        </div>
+                      </div>
+                      
+                      <div class="col-md-3">
+                        <div class="small text-muted">Quantité × Prix unitaire</div>
+                        <div>{{ item.quantity }} × {{ item.unit_price }} FCFA</div>
+                      </div>
+                      
+                      <div class="col-md-3">
+                        {% if item.supplements.all %}
+                          <div class="small text-muted mb-1">Suppléments :</div>
+                          {% for sup in item.supplements.all %}
+                            <div class="small">
+                              <span class="badge bg-info text-dark">
+                                {{ sup.supplement.name }} ×{{ sup.quantity }}
+                              </span>
+                              <span class="text-muted">
+                                = {{ sup.subtotal }} FCFA
+                              </span>
+                            </div>
+                          {% endfor %}
+                        {% else %}
+                          <div class="small text-muted">Aucun supplément</div>
+                        {% endif %}
+                      </div>
+                      
+                      <div class="col-md-2 text-end">
+                        <div class="small text-muted">Sous-total</div>
+                        <div class="fw-bold text-success">{{ item.subtotal }} FCFA</div>
+                      </div>
+                      
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+              
+              <!-- Résumé financier -->
+              <div class="card bg-primary bg-opacity-10 border-0 mt-3">
+                <div class="card-body py-2">
+                  <div class="row">
+                    <div class="col-md-8 text-end">
+                      <div class="small text-muted">Sous-total :</div>
+                      {% if order.discount_total > 0 %}
+                        <div class="small text-success">Remise :</div>
+                      {% endif %}
+                      <div class="fw-bold">TOTAL :</div>
+                    </div>
+                    <div class="col-md-4 text-end">
+                      <div class="small">{{ order.subtotal }} FCFA</div>
+                      {% if order.discount_total > 0 %}
+                        <div class="small text-success">-{{ order.discount_total }} FCFA</div>
+                      {% endif %}
+                      <div class="fw-bold h5 mb-0 text-primary">{{ order.total }} FCFA</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex gap-2 justify-content-end">
+              <a href="{% url 'staff:admin_order_detail' order.id %}" 
+                 class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-eye"></i> Détails
+              </a>
+              
+              {% if order.status == "pending" %}
+                <form method="post" 
+                      action="{% url 'staff:mark_order_confirmed' order.id %}" 
+                      class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button class="btn btn-sm btn-info" type="submit">
+                    <i class="bi bi-check"></i> Confirmer
+                  </button>
+                </form>
+              {% endif %}
+              
+              {% if order.status != "delivered" and order.status != "canceled" %}
+                <form method="post" 
+                      action="{% url 'staff:mark_order_delivered' order.id %}" 
+                      class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button class="btn btn-sm btn-success" type="submit">
+                    <i class="bi bi-check-circle"></i> Livrer
+                  </button>
+                </form>
+                
+                <form method="post" 
+                      action="{% url 'staff:mark_order_canceled' order.id %}" 
+                      class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button class="btn btn-sm btn-outline-danger" 
+                          type="submit"
+                          onclick="return confirm('Annuler cette commande ?')">
+                    <i class="bi bi-x-circle"></i> Annuler
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+
+          </div>
+        </div>
+      {% empty %}
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center py-5">
+            <div class="text-muted mb-3">
+              <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+            </div>
+            <h5 class="text-muted">Aucune commande trouvée</h5>
+            <p class="text-muted small">Essayez de modifier vos filtres</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+    <nav aria-label="Pagination" class="mt-4">
+      <ul class="pagination justify-content-center">
+        
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1{{ pagination_query }}">
+              &laquo; Première
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{{ pagination_query }}">
+              Précédente
+            </a>
+          </li>
+        {% endif %}
+        
+        <li class="page-item active">
+          <span class="page-link">
+            Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+          </span>
+        </li>
+        
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{{ pagination_query }}">
+              Suivante
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{{ pagination_query }}">
+              Dernière &raquo;
+            </a>
+          </li>
+        {% endif %}
+        
+      </ul>
+    </nav>
+  {% endif %}
+
+</div>
+{% endblock %}

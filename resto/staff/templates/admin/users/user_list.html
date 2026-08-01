@@ -1,0 +1,332 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Utilisateurs{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <div>
+    <h1 class="h3 mb-1 d-flex align-items-center gap-2">
+      <i class="bi bi-people-fill text-primary"></i>
+      Gestion des Utilisateurs
+    </h1>
+    <div class="text-muted">
+      <i class="bi bi-info-circle"></i>
+      {{ users|length }} compte(s) affiché(s) sur 200 maximum
+    </div>
+  </div>
+
+  <!-- Recherche améliorée -->
+  <form method="get" class="d-flex gap-2" style="min-width: 320px;">
+    <div class="input-group">
+      <span class="input-group-text bg-white border-end-0">
+        <i class="bi bi-search"></i>
+      </span>
+      <input
+        type="text"
+        name="q"
+        class="form-control border-start-0 ps-0"
+        placeholder="Rechercher par username ou email..."
+        value="{{ q|default:'' }}"
+        autocomplete="off"
+      >
+    </div>
+    <button class="btn btn-dark" type="submit">
+      <i class="bi bi-funnel"></i> Filtrer
+    </button>
+    {% if q %}
+      <a href="{% url 'staff:admin_user_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-x-circle"></i>
+      </a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Stats rapides -->
+{% if users %}
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-sm-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body text-center">
+        <i class="bi bi-person-check-fill text-success fs-1 mb-2"></i>
+        <div class="h4 mb-0">{{ users|length }}</div>
+        <div class="text-muted small">Utilisateurs affichés</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body text-center">
+        <i class="bi bi-shield-check text-primary fs-1 mb-2"></i>
+        <div class="h4 mb-0">{{ staff_count }}</div>
+        <div class="text-muted small">Staff actifs</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body text-center">
+        <i class="bi bi-calendar-plus text-info fs-1 mb-2"></i>
+        <div class="h6 mb-0">
+          {% if last_signup %}
+            {{ last_signup|date:"d/m/Y" }}
+          {% else %}
+            —
+          {% endif %}
+        </div>
+        <div class="text-muted small">Dernière inscription</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body text-center">
+        <i class="bi bi-graph-up-arrow text-warning fs-1 mb-2"></i>
+        <div class="h4 mb-0">{{ total_count }}</div>
+        <div class="text-muted small">Total inscriptions</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="card shadow-sm">
+  <div class="card-header">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2 class="h6 mb-0">
+        <i class="bi bi-table"></i>
+        Liste des utilisateurs
+      </h2>
+      {% if q %}
+        <span class="badge bg-info">
+          <i class="bi bi-filter"></i> Filtré: "{{ q }}"
+        </span>
+      {% endif %}
+    </div>
+  </div>
+  
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th style="width:80px;">
+            <i class="bi bi-hash"></i> ID
+          </th>
+          <th>
+            <i class="bi bi-person"></i> Username
+          </th>
+          <th>
+            <i class="bi bi-envelope"></i> Email
+          </th>
+          <th style="width:140px;">
+            <i class="bi bi-calendar-event"></i> Inscription
+          </th>
+          <th style="width:100px;" class="text-center">
+            <i class="bi bi-shield"></i> Staff
+          </th>
+          <th style="width:120px;" class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <tr>
+            <td>
+              <span class="badge bg-light text-dark border">{{ u.id }}</span>
+            </td>
+
+            <td>
+              <a href="{% url 'staff:admin_user_detail' u.id %}" class="text-decoration-none fw-semibold d-flex align-items-center gap-2">
+                <div class="avatar-circle" style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.85rem;">
+                  {{ u.username|first|upper }}
+                </div>
+                {{ u.username }}
+              </a>
+            </td>
+
+            <td>
+              {% if u.email %}
+                <a href="mailto:{{ u.email }}" class="text-muted text-decoration-none d-flex align-items-center gap-1">
+                  <i class="bi bi-envelope-fill small"></i>
+                  {{ u.email }}
+                </a>
+              {% else %}
+                <span class="text-muted fst-italic">
+                  <i class="bi bi-dash-circle"></i> Non renseigné
+                </span>
+              {% endif %}
+            </td>
+
+            <td class="text-muted">
+              <i class="bi bi-calendar3"></i>
+              {{ u.date_joined|date:"d/m/Y" }}
+            </td>
+
+            <td class="text-center">
+              {% if u.is_staff %}
+                <span class="badge bg-success">
+                  <i class="bi bi-check-circle-fill"></i> Oui
+                </span>
+              {% else %}
+                <span class="badge bg-secondary">
+                  <i class="bi bi-x-circle"></i> Non
+                </span>
+              {% endif %}
+            </td>
+
+            <td class="text-end">
+              <div class="btn-group" role="group">
+                <a class="btn btn-sm btn-outline-primary" 
+                   href="{% url 'staff:admin_user_detail' u.id %}"
+                   title="Voir les détails">
+                  <i class="bi bi-eye"></i>
+                </a>
+                {% comment %}
+                Ajouter d'autres actions si nécessaire
+                <button class="btn btn-sm btn-outline-secondary" title="Éditer">
+                  <i class="bi bi-pencil"></i>
+                </button>
+                {% endcomment %}
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <h5 class="mt-3">Aucun utilisateur trouvé</h5>
+                <p class="text-muted">
+                  {% if q %}
+                    Aucun résultat pour "{{ q }}". Essayez une autre recherche.
+                  {% else %}
+                    Il n'y a aucun utilisateur enregistré pour le moment.
+                  {% endif %}
+                </p>
+                {% if q %}
+                  <a href="{% url 'staff:admin_user_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-counterclockwise"></i> Réinitialiser la recherche
+                  </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if users %}
+  <div class="card-footer bg-light border-top">
+    <div class="d-flex justify-content-between align-items-center small text-muted">
+      <div>
+        <i class="bi bi-info-circle"></i>
+        Affichage limité aux 200 derniers utilisateurs pour des raisons de performance
+      </div>
+      <div>
+        <i class="bi bi-lightning-charge"></i>
+        Recherche optimisée
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Aide contextuelle -->
+<div class="card mt-4 border-info">
+  <div class="card-body">
+    <h6 class="card-title d-flex align-items-center gap-2">
+      <i class="bi bi-lightbulb text-warning"></i>
+      Astuces d'utilisation
+    </h6>
+    <ul class="mb-0 small">
+      <li><strong>Recherche intelligente :</strong> Recherchez par username ou email pour trouver rapidement un utilisateur</li>
+      <li><strong>Limitation :</strong> Seuls les 200 derniers utilisateurs sont affichés pour optimiser les performances</li>
+      <li><strong>Navigation rapide :</strong> Cliquez sur le username ou l'icône œil pour voir les détails complets</li>
+      <li><strong>Badge Staff :</strong> Identifiez rapidement les membres de l'équipe administrative</li>
+    </ul>
+  </div>
+</div>
+
+<style>
+  /* Styles additionnels pour cette page */
+  .input-group-text {
+    border-right: none !important;
+  }
+  
+  .form-control:focus + .input-group-text,
+  .input-group-text + .form-control:focus {
+    border-color: var(--primary-color);
+  }
+
+  .avatar-circle {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: transform 0.3s ease;
+  }
+
+  .avatar-circle:hover {
+    transform: scale(1.1);
+  }
+
+  .table tbody tr {
+    cursor: pointer;
+  }
+
+  .btn-group .btn {
+    border-radius: 8px;
+  }
+
+  .btn-group .btn:not(:last-child) {
+    margin-right: 4px;
+  }
+
+  .empty-state {
+    padding: 4rem 2rem;
+  }
+
+  .empty-state i {
+    font-size: 4rem;
+    opacity: 0.3;
+    color: var(--text-secondary);
+  }
+
+  /* Animation au survol des lignes */
+  @keyframes rowHover {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(4px);
+    }
+  }
+
+  .table tbody tr:hover {
+    animation: rowHover 0.3s ease;
+  }
+</style>
+
+<script>
+  // Highlight de la recherche
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('input[name="q"]');
+    if (searchInput && searchInput.value) {
+      searchInput.focus();
+      searchInput.select();
+    }
+  });
+
+  // Click sur la ligne entière
+  document.addEventListener('DOMContentLoaded', function() {
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+      const link = row.querySelector('a[href*="user_detail"]');
+      if (link) {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', function(e) {
+          // Ne pas déclencher si on clique sur un bouton ou un lien
+          if (!e.target.closest('a') && !e.target.closest('button')) {
+            window.location = link.href;
+          }
+        });
+      }
+    });
+  });
+</script>
+{% endblock %}

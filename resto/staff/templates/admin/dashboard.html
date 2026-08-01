@@ -1,0 +1,643 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Dashboard – Admin Resto{% endblock %}
+
+{% block content %}
+<!-- En-tête avec sélecteur de date -->
+<div class="row mb-4">
+  <div class="col-12">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div>
+        <h1 class="h3 mb-1 d-flex align-items-center gap-2">
+          <i class="bi bi-speedometer2"></i>
+          Tableau de bord
+        </h1>
+        <p class="text-muted mb-0">
+          <i class="bi bi-calendar-event"></i>
+          {{ today|date:"l d F Y" }}
+        </p>
+      </div>
+
+      <form method="get" class="d-flex gap-2" style="min-width: 320px;">
+        <div class="input-group">
+          <span class="input-group-text bg-white">
+            <i class="bi bi-calendar3"></i>
+          </span>
+          <input type="date" name="date" class="form-control" value="{{ today|date:'Y-m-d' }}">
+        </div>
+        <button class="btn btn-dark" type="submit">
+          <i class="bi bi-search"></i> Voir
+        </button>
+        {% if request.GET.date %}
+          <a href="{% url 'staff:admin_dashboard' %}" class="btn btn-outline-secondary" title="Aujourd'hui">
+            <i class="bi bi-arrow-counterclockwise"></i>
+          </a>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Cartes de statistiques -->
+<div class="row g-3 mb-4">
+  <div class="col-xl-3 col-md-6">
+    <div class="stat-card stat-card-primary">
+      <div class="stat-card-icon">
+        <i class="bi bi-receipt"></i>
+      </div>
+      <div class="stat-card-content">
+        <div class="stat-card-label">Commandes du jour</div>
+        <div class="stat-card-value">{{ orders_count_today }}</div>
+        <div class="stat-card-trend">
+          <i class="bi bi-graph-up"></i> Performance
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6">
+    <div class="stat-card stat-card-success">
+      <div class="stat-card-icon">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+      <div class="stat-card-content">
+        <div class="stat-card-label">Ventes du jour</div>
+        <div class="stat-card-value">{{ total_sales_today|floatformat:0 }}</div>
+        <div class="stat-card-unit">FCFA</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6">
+    <div class="stat-card stat-card-warning">
+      <div class="stat-card-icon">
+        <i class="bi bi-clock-history"></i>
+      </div>
+      <div class="stat-card-content">
+        <div class="stat-card-label">En attente (jour)</div>
+        <div class="stat-card-value">{{ pending_orders_count }}</div>
+        <div class="stat-card-trend warning">
+          <i class="bi bi-exclamation-triangle"></i> Action requise
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-3 col-md-6">
+    <div class="stat-card stat-card-info">
+      <div class="stat-card-icon">
+        <i class="bi bi-star-fill"></i>
+      </div>
+      <div class="stat-card-content">
+        <div class="stat-card-label">Top plat du jour</div>
+        {% if top_meals %}
+          <div class="stat-card-value-text">{{ top_meals.0.meal__name|truncatechars:20 }}</div>
+          <div class="stat-card-trend">
+            <i class="bi bi-arrow-up-circle"></i> {{ top_meals.0.quantity_sold }} vendu(s)
+          </div>
+        {% else %}
+          <div class="stat-card-value-text text-muted">Aucune vente</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Commandes du jour -->
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+          <h2 class="h6 mb-0">
+            <i class="bi bi-receipt-cutoff"></i> Commandes du jour
+          </h2>
+          <div class="d-flex gap-2">
+            <span class="badge bg-light text-dark">
+              {{ orders_today|length }} commande(s)
+            </span>
+            <a href="{% url 'staff:admin_orders_list' %}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-box-arrow-up-right"></i> Voir tout
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th><i class="bi bi-hash"></i> ID</th>
+              <th><i class="bi bi-person"></i> Client</th>
+              <th><i class="bi bi-person-badge"></i> User</th>
+              <th><i class="bi bi-telephone"></i> Téléphone</th>
+              <th><i class="bi bi-geo-alt"></i> Adresse</th>
+              <th><i class="bi bi-cash"></i> Total</th>
+              <th><i class="bi bi-flag"></i> Statut</th>
+              <th><i class="bi bi-gift"></i> Avantage</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in orders_today %}
+              <tr>
+                <td>
+                  <a href="{% url 'staff:admin_order_detail' order.id %}" class="text-decoration-none">
+                    <span class="badge bg-light text-dark border">#{{ order.id }}</span>
+                  </a>
+                </td>
+                
+                <td class="fw-semibold">{{ order.customer_name|default:"-" }}</td>
+                
+                <td>
+                  {% if order.user %}
+                    <a href="{% url 'staff:admin_user_detail' order.user.id %}" class="text-decoration-none">
+                      <span class="badge bg-primary">
+                        <i class="bi bi-person-check"></i> {{ order.user.username }}
+                      </span>
+                    </a>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+                
+                <td class="text-muted small">{{ order.phone|default:"-" }}</td>
+                
+                <td class="text-truncate" style="max-width:200px;" title="{{ order.address }}">
+                  {{ order.address|default:"-" }}
+                </td>
+                
+                <td>
+                  <span class="fw-semibold text-success">{{ order.total|floatformat:0 }} FCFA</span>
+                </td>
+
+                <td>
+                  {% if order.status == "pending" %}
+                    <span class="badge bg-warning">
+                      <i class="bi bi-clock"></i> {{ order.get_status_display }}
+                    </span>
+                  {% elif order.status == "confirmed" %}
+                    <span class="badge bg-info">
+                      <i class="bi bi-check2"></i> {{ order.get_status_display }}
+                    </span>
+                  {% elif order.status == "delivered" %}
+                    <span class="badge bg-success">
+                      <i class="bi bi-check-circle-fill"></i> {{ order.get_status_display }}
+                    </span>
+                  {% elif order.status == "canceled" %}
+                    <span class="badge bg-danger">
+                      <i class="bi bi-x-circle"></i> {{ order.get_status_display }}
+                    </span>
+                  {% endif %}
+                </td>
+
+                <!-- Avantage: fidélité / promo -->
+                <td>
+                  {% if order.loyalty_reward == "free_meal" %}
+                    <span class="badge" style="background: linear-gradient(135deg, #06d6a0 0%, #04a777 100%);">
+                      <i class="bi bi-gift-fill"></i> Plat gratuit
+                    </span>
+                  {% elif order.loyalty_reward == "discount_500" %}
+                    <span class="badge" style="background: linear-gradient(135deg, #06d6a0 0%, #04a777 100%);">
+                      <i class="bi bi-tag-fill"></i> -500 FCFA
+                    </span>
+                  {% elif order.promo_code %}
+                    <span class="badge" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                      <i class="bi bi-tag-fill"></i> {{ order.promo_code }}
+                    </span>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+
+                <!-- Actions -->
+                <td>
+                  <div class="btn-group btn-group-sm" role="group">
+                    {% if order.status == "pending" %}
+                      <form method="post" action="{% url 'staff:mark_order_confirmed' order.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button class="btn btn-outline-info" type="submit" title="Confirmer">
+                          <i class="bi bi-check2"></i>
+                        </button>
+                      </form>
+                    {% endif %}
+
+                    {% if order.status != "delivered" %}
+                      <form method="post" action="{% url 'staff:mark_order_delivered' order.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button class="btn btn-success" type="submit" title="Livrer">
+                          <i class="bi bi-check-circle-fill"></i>
+                        </button>
+                      </form>
+
+                      <form method="post" action="{% url 'staff:mark_order_canceled' order.id %}" class="d-inline" data-confirm="Êtes-vous sûr de vouloir annuler cette commande ?">
+                        {% csrf_token %}
+                        <button class="btn btn-outline-danger" type="submit" title="Annuler">
+                          <i class="bi bi-x-circle"></i>
+                        </button>
+                      </form>
+                    {% else %}
+                      <span class="badge bg-success">
+                        <i class="bi bi-check-all"></i> Terminée
+                      </span>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="9">
+                  <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h5 class="mt-3">Aucune commande aujourd'hui</h5>
+                    <p class="text-muted mb-0">Les commandes apparaîtront ici au fur et à mesure</p>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Colonne droite : Top plats + Plats -->
+  <div class="col-lg-4">
+    
+    <!-- Top plats du jour -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header">
+        <h2 class="h6 mb-0">
+          <i class="bi bi-trophy-fill text-warning"></i> Top plats du jour
+        </h2>
+      </div>
+      <div class="card-body p-0">
+        {% if top_meals %}
+          <div class="list-group list-group-flush">
+            {% for m in top_meals %}
+              <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="rank-badge">
+                    {% if forloop.counter == 1 %}
+                      <i class="bi bi-award-fill text-warning"></i>
+                    {% elif forloop.counter == 2 %}
+                      <i class="bi bi-award text-secondary"></i>
+                    {% elif forloop.counter == 3 %}
+                      <i class="bi bi-award text-danger"></i>
+                    {% else %}
+                      {{ forloop.counter }}
+                    {% endif %}
+                  </div>
+                  <div>
+                    <div class="fw-semibold">{{ m.meal__name }}</div>
+                    <div class="text-muted small">
+                      <i class="bi bi-box"></i> {{ m.quantity_sold }} vendu(s)
+                    </div>
+                  </div>
+                </div>
+                <div class="text-end">
+                  <div class="fw-bold text-success">{{ m.revenue|floatformat:0 }}</div>
+                  <div class="text-muted small">FCFA</div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <i class="bi bi-graph-down"></i>
+            <p class="text-muted small mb-0 mt-2">Aucune vente aujourd'hui</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Liste des plats -->
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+          <h2 class="h6 mb-0">
+            <i class="bi bi-egg-fried"></i> Gestion des plats
+          </h2>
+          <a class="btn btn-sm btn-dark" href="{% url 'staff:meal_create' %}">
+            <i class="bi bi-plus-circle"></i> Nouveau
+          </a>
+        </div>
+      </div>
+      
+      <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+        <table class="table table-hover table-sm mb-0 align-middle">
+          <thead class="sticky-top">
+            <tr>
+              <th>Nom</th>
+              <th>Catégorie</th>
+              <th>Prix</th>
+              <th>Statut</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for meal in meals %}
+              <tr>
+                <td>
+                  <div class="fw-semibold">{{ meal.name|truncatechars:25 }}</div>
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark">{{ meal.category.name }}</span>
+                </td>
+                <td>
+                  {% if meal.price_min %}
+                    {% if meal.price_max and meal.price_max != meal.price_min %}
+                      <span class="fw-semibold text-success">{{ meal.price_min|floatformat:0 }} – {{ meal.price_max|floatformat:0 }}</span>
+                    {% else %}
+                      <span class="fw-semibold text-success">{{ meal.price_min|floatformat:0 }}</span>
+                    {% endif %}
+                    <span class="text-muted small">FCFA</span>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if meal.is_active %}
+                    <span class="badge bg-success">
+                      <i class="bi bi-check-circle"></i> Actif
+                    </span>
+                  {% else %}
+                    <span class="badge bg-secondary">
+                      <i class="bi bi-pause-circle"></i> Inactif
+                    </span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-primary" href="{% url 'staff:meal_update' meal.id %}" title="Éditer">
+                    <i class="bi bi-pencil"></i>
+                  </a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5">
+                  <div class="empty-state" style="padding: 2rem 1rem;">
+                    <i class="bi bi-egg" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                    <p class="text-muted small mb-0 mt-2">Aucun plat enregistré</p>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if meals %}
+      <div class="card-footer bg-light text-center">
+        <a href="{% url 'staff:meal_list' %}" class="text-decoration-none small">
+          <i class="bi bi-list-ul"></i> Voir tous les plats
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<!-- Section d'aide -->
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="card border-info">
+      <div class="card-body">
+        <h6 class="card-title d-flex align-items-center gap-2">
+          <i class="bi bi-info-circle-fill text-info"></i>
+          Raccourcis clavier et astuces
+        </h6>
+        <div class="row">
+          <div class="col-md-4">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <kbd>Ctrl</kbd> + <kbd>K</kbd>
+              <span class="text-muted small">Recherche rapide</span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <kbd>Ctrl</kbd> + <kbd>N</kbd>
+              <span class="text-muted small">Nouvelle commande</span>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <kbd>Esc</kbd>
+              <span class="text-muted small">Fermer les modales</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Cartes de statistiques */
+  .stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.07);
+    transition: all 0.3s ease;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+  }
+
+  .stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+    border-color: var(--primary-color);
+  }
+
+  .stat-card-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    flex-shrink: 0;
+  }
+
+  .stat-card-primary .stat-card-icon {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .stat-card-success .stat-card-icon {
+    background: linear-gradient(135deg, #06d6a0 0%, #04a777 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(6, 214, 160, 0.3);
+  }
+
+  .stat-card-warning .stat-card-icon {
+    background: linear-gradient(135deg, #ffd23f 0%, #ff9800 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(255, 210, 63, 0.3);
+  }
+
+  .stat-card-info .stat-card-icon {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+  }
+
+  .stat-card-content {
+    flex: 1;
+  }
+
+  .stat-card-label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-card-value-text {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-card-unit {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  .stat-card-trend {
+    font-size: 0.75rem;
+    color: var(--success-color);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .stat-card-trend.warning {
+    color: var(--warning-color);
+  }
+
+  /* Liste classée */
+  .rank-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.875rem;
+  }
+
+  .list-group-item {
+    transition: var(--transition);
+    border-left: 3px solid transparent;
+  }
+
+  .list-group-item:hover {
+    background: var(--bg-light);
+    border-left-color: var(--primary-color);
+    transform: translateX(4px);
+  }
+
+  /* Table sticky header */
+  .sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  /* Kbd styling */
+  kbd {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  /* Animation pour les nouvelles commandes */
+  @keyframes newOrder {
+    0% {
+      background: #fff3cd;
+    }
+    100% {
+      background: white;
+    }
+  }
+
+  .new-order {
+    animation: newOrder 2s ease-out;
+  }
+</style>
+
+<script>
+  // Rafraîchissement automatique toutes les 30 secondes
+  let autoRefresh = false;
+  
+  // Activer le rafraîchissement auto si on est sur aujourd'hui
+  {% if not request.GET.date and pending_orders_count > 0 %}
+    autoRefresh = true;
+    setInterval(() => {
+      if (autoRefresh && document.hidden === false) {
+        location.reload();
+      }
+    }, 30000);
+  {% endif %}
+
+  // Confirmer les actions dangereuses
+  document.addEventListener('DOMContentLoaded', function() {
+    const dangerousForms = document.querySelectorAll('form[data-confirm]');
+    dangerousForms.forEach(form => {
+      form.addEventListener('submit', function(e) {
+        const message = form.dataset.confirm || 'Êtes-vous sûr ?';
+        if (!confirm(message)) {
+          e.preventDefault();
+        }
+      });
+    });
+  });
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', function(e) {
+    // Ctrl+K: Focus sur la recherche
+    if (e.ctrlKey && e.key === 'k') {
+      e.preventDefault();
+      document.querySelector('input[type="date"]')?.focus();
+    }
+  });
+</script>
+{% endblock %}

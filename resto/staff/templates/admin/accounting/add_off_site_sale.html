@@ -1,0 +1,196 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}{% if mode == 'edit' %}Éditer{% else %}Ajouter{% endif %} Vente Hors Site{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col-12">
+    <h1 class="h3 mb-1 d-flex align-items-center gap-2">
+      <i class="bi bi-bag-check"></i>
+      {% if mode == 'edit' %}Éditer Vente Hors Site{% else %}Ajouter une Vente Hors Site{% endif %}
+    </h1>
+    <p class="text-muted">{% if mode == 'edit' %}Modifier les détails de la vente{% else %}Enregistrer une nouvelle vente en dehors du site{% endif %}</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0">
+      <form method="post" class="needs-validation" novalidate id="offsite-sale-form">
+        {% csrf_token %}
+        {% if next %}
+          <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+        
+        <div class="card-body p-4">
+          <!-- Date -->
+          <div class="mb-4">
+            <label for="{{ form.date.id_for_label }}" class="form-label fw-600">
+              <i class="bi bi-calendar"></i>
+              Date
+            </label>
+            {{ form.date }}
+            {% if form.date.errors %}
+              <div class="invalid-feedback d-block">{{ form.date.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Description -->
+          <div class="mb-4">
+            <label for="{{ form.description.id_for_label }}" class="form-label fw-600">
+              <i class="bi bi-pencil"></i>
+              Description
+            </label>
+            {{ form.description }}
+            {% if form.description.errors %}
+              <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
+            {% endif %}
+            <small class="text-muted d-block mt-2">
+              Exemple: "Vente directe café", "Catering entreprise ABC", "Livraison personnelle"
+            </small>
+          </div>
+
+          <!-- Montant -->
+          <div class="mb-4">
+            <label for="{{ form.amount.id_for_label }}" class="form-label fw-600">
+              <i class="bi bi-cash-stack"></i>
+              Montant (FCFA)
+            </label>
+            {{ form.amount }}
+            {% if form.amount.errors %}
+              <div class="invalid-feedback d-block">{{ form.amount.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Méthode de paiement -->
+          <div class="mb-4">
+            <label for="{{ form.payment_method.id_for_label }}" class="form-label fw-600">
+              <i class="bi bi-credit-card"></i>
+              Méthode de Paiement
+            </label>
+            {{ form.payment_method }}
+            {% if form.payment_method.errors %}
+              <div class="invalid-feedback d-block">{{ form.payment_method.errors.0 }}</div>
+            {% endif %}
+            <small class="text-muted d-block mt-2">
+              Comment avez-vous reçu le paiement?
+            </small>
+          </div>
+
+          <!-- Notes -->
+          <div class="mb-4">
+            <label for="{{ form.notes.id_for_label }}" class="form-label fw-600">
+              <i class="bi bi-chat-left-text"></i>
+              Notes (optionnel)
+            </label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+              <div class="invalid-feedback d-block">{{ form.notes.errors.0 }}</div>
+            {% endif %}
+            <small class="text-muted d-block mt-2">
+              Ajoutez des détails supplémentaires si nécessaire
+            </small>
+          </div>
+        </div>
+      </form>
+
+      <!-- Boutons -->
+      <div class="card-footer bg-light p-4 d-flex gap-2">
+          <button type="submit" class="btn btn-success" form="offsite-sale-form">
+            <i class="bi bi-check-circle"></i>
+            {% if mode == 'edit' %}Mettre à jour{% else %}Enregistrer{% endif %}
+          </button>
+          <a href="{{ back_url }}" class="btn btn-outline-secondary">
+            <i class="bi bi-x-circle"></i>
+            Annuler
+          </a>
+          {% if mode == 'edit' and sale %}
+            <form method="post" action="{% url 'staff:delete_off_site_sale' sale.id %}" style="display: inline;" onsubmit="return confirm('Confirmer la suppression de cette vente?');" class="ms-auto" data-no-loading>
+              {% csrf_token %}
+              {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+              {% endif %}
+              <button type="submit" class="btn btn-outline-danger">
+                <i class="bi bi-trash"></i>
+                Supprimer
+              </button>
+            </form>
+          {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar: Informations supplémentaires -->
+  <div class="col-lg-4">
+    <div class="card shadow-sm border-0 bg-light">
+      <div class="card-body">
+        <h5 class="mb-3">
+          <i class="bi bi-info-circle"></i>
+          Types de Ventes Hors Site
+        </h5>
+        <ul class="list-unstyled">
+          <li class="mb-3">
+            <strong>Vente directe:</strong>
+            <br>
+            <small class="text-muted">Vente au comptoir ou directement à un client</small>
+          </li>
+          <li class="mb-3">
+            <strong>Catering:</strong>
+            <br>
+            <small class="text-muted">Fourniture pour événement ou entreprise</small>
+          </li>
+          <li class="mb-3">
+            <strong>Livraison personnelle:</strong>
+            <br>
+            <small class="text-muted">Livraison effectuée par le personnel</small>
+          </li>
+          <li class="mb-3">
+            <strong>Partenariat:</strong>
+            <br>
+            <small class="text-muted">Vente via un partenaire ou revendeur</small>
+          </li>
+          <li>
+            <strong>Montant:</strong>
+            <br>
+            <small class="text-muted">Entrez le montant TTC en FCFA</small>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Conseil -->
+    <div class="card shadow-sm border-0 bg-warning bg-opacity-10 mt-3">
+      <div class="card-body">
+        <h6 class="mb-2">
+          <i class="bi bi-lightbulb"></i>
+          Conseil
+        </h6>
+        <small class="text-muted">
+          Enregistrez chaque vente hors site pour un suivi précis des revenus et une comptabilité complète.
+        </small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .form-label {
+    color: #1a1a2e;
+    font-size: 0.95rem;
+  }
+  
+  .form-control, .form-select {
+    border-color: #e2e8f0;
+    border-radius: 6px;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    border-color: #06d6a0;
+    box-shadow: 0 0 0 0.2rem rgba(6, 214, 160, 0.15);
+  }
+  
+  .invalid-feedback {
+    color: #dc3545;
+  }
+</style>
+{% endblock %}

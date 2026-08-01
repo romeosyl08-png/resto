@@ -1,0 +1,452 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ u.username }} - Détails Utilisateur{% endblock %}
+
+{% block content %}
+<!-- En-tête utilisateur -->
+<div class="d-flex justify-content-between align-items-start mb-4 pb-3 border-bottom">
+  <div class="d-flex align-items-center gap-3">
+    <!-- Avatar -->
+    <div class="avatar-large" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 2rem; box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);">
+      {{ u.username|first|upper }}
+    </div>
+    
+    <div>
+      <h1 class="h3 mb-1 d-flex align-items-center gap-2">
+        {{ u.username }}
+        {% if u.is_staff %}
+          <span class="badge bg-success">
+            <i class="bi bi-shield-check"></i> Staff
+          </span>
+        {% endif %}
+      </h1>
+      
+      <div class="d-flex flex-wrap gap-2 align-items-center text-muted">
+        {% if u.email %}
+          <a href="mailto:{{ u.email }}" class="text-decoration-none text-muted">
+            <i class="bi bi-envelope-fill"></i> {{ u.email }}
+          </a>
+        {% else %}
+          <span class="fst-italic">
+            <i class="bi bi-envelope"></i> Email non renseigné
+          </span>
+        {% endif %}
+        
+        <span class="mx-2">•</span>
+        
+        <span>
+          <i class="bi bi-calendar-check"></i> 
+          Inscrit le {{ u.date_joined|date:"d/m/Y à H:i" }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <a class="btn btn-outline-secondary" href="{% url 'staff:admin_user_list' %}">
+    <i class="bi bi-arrow-left"></i> Retour
+  </a>
+</div>
+
+<div class="row g-4">
+
+  <!-- Colonne gauche : Infos + Fidélité + Stats -->
+  <div class="col-lg-4">
+
+    <!-- Informations utilisateur -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header">
+        <i class="bi bi-person-circle"></i> Informations générales
+      </div>
+      <div class="card-body">
+        <div class="info-row">
+          <div class="info-label">
+            <i class="bi bi-calendar-plus"></i> Inscription
+          </div>
+          <div class="info-value">
+            {{ u.date_joined|date:"d/m/Y H:i" }}
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">
+            <i class="bi bi-shield"></i> Statut Staff
+          </div>
+          <div class="info-value">
+            {% if u.is_staff %}
+              <span class="badge bg-success">
+                <i class="bi bi-check-circle-fill"></i> Oui
+              </span>
+            {% else %}
+              <span class="badge bg-secondary">
+                <i class="bi bi-x-circle"></i> Non
+              </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="info-row border-0">
+          <div class="info-label">
+            <i class="bi bi-cash-stack"></i> Total dépensé
+          </div>
+          <div class="info-value fw-bold text-success">
+            {{ total_spent|floatformat:0 }} FCFA
+          </div>
+        </div>
+      </div>
+    </div>
+    <table class="table table-sm table-bordered">
+      <thead>
+        <tr>
+          <th>Prix</th>
+          <th>Plats livrés</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>500 FCFA</td>
+          <td>{{ c500 }}</td>
+        </tr>
+        <tr>
+          <td>1000 FCFA</td>
+          <td>{{ c1000 }}</td>
+        </tr>
+        <tr>
+          <td>1500 FCFA</td>
+          <td>{{ c1500 }}</td>
+        </tr>
+      </tbody>
+    </table>
+ 
+    <!-- Programme de fidélité -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header">
+        <i class="bi bi-gift"></i> Programme de Fidélité
+      </div>
+      <div class="card-body">
+        <p class="small text-muted mb-3">1 plat livré = 1 point</p>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="fw-semibold">Points disponibles</span>
+          <span class="badge bg-primary">{{ points }}</span>
+        </div>
+
+        <div class="mb-3">
+          <div class="d-flex justify-content-between mb-2">
+            <span class="badge" style="background:linear-gradient(135deg,#4facfe,#00f2fe);">
+              Réduction 500 FCFA
+            </span>
+            <strong>{{ points }}/10</strong>
+          </div>
+          <div class="progress" style="height:8px;">
+            <div class="progress-bar"
+                 style="width: {{ p10_pct }}%;
+                        background:linear-gradient(90deg,#4facfe,#00f2fe);">
+            </div>
+          </div>
+          {% if points_to_discount > 0 %}
+            <div class="text-muted small mt-1">
+              Prochain avantage dans {{ points_to_discount }} point{{ points_to_discount|pluralize }}
+            </div>
+          {% else %}
+            <div class="text-success small mt-1">
+              <i class="bi bi-check-circle-fill"></i> Réduction disponible
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="mb-0">
+          <div class="d-flex justify-content-between mb-2">
+            <span class="badge" style="background:linear-gradient(135deg,#f093fb,#f5576c);">
+              Plat gratuit
+            </span>
+            <strong>{{ points }}/15</strong>
+          </div>
+          <div class="progress" style="height:8px;">
+            <div class="progress-bar"
+                 style="width: {{ p15_pct }}%;
+                        background:linear-gradient(90deg,#f093fb,#f5576c);">
+            </div>
+          </div>
+          {% if points_to_free > 0 %}
+            <div class="text-muted small mt-1">
+              Prochain avantage dans {{ points_to_free }} point{{ points_to_free|pluralize }}
+            </div>
+          {% else %}
+            <div class="text-success small mt-1">
+              <i class="bi bi-check-circle-fill"></i> Plat gratuit disponible
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Stats par statut -->
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <i class="bi bi-bar-chart"></i> Statistiques des commandes
+      </div>
+      <div class="card-body">
+        <div class="stat-item">
+          <div class="stat-icon bg-warning-subtle">
+            <i class="bi bi-clock-history text-warning"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">En attente</div>
+            <div class="stat-value">{{ counts.pending|default:0 }}</div>
+          </div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-icon bg-info-subtle">
+            <i class="bi bi-check2-circle text-info"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">Confirmées</div>
+            <div class="stat-value">{{ counts.confirmed|default:0 }}</div>
+          </div>
+        </div>
+
+        <div class="stat-item">
+          <div class="stat-icon bg-success-subtle">
+            <i class="bi bi-check-circle-fill text-success"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">Livrées</div>
+            <div class="stat-value">{{ counts.delivered|default:0 }}</div>
+          </div>
+        </div>
+
+        <div class="stat-item border-0">
+          <div class="stat-icon bg-danger-subtle">
+            <i class="bi bi-x-circle text-danger"></i>
+          </div>
+          <div class="stat-info">
+            <div class="stat-label">Annulées</div>
+            <div class="stat-value">{{ counts.canceled|default:0 }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Colonne droite : Commandes -->
+  <div class="col-lg-8">
+
+    <!-- Dernières commandes -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+          <span>
+            <i class="bi bi-receipt"></i> Dernières commandes
+          </span>
+          <span class="badge bg-light text-dark">
+            {{ orders|length }} récente(s)
+          </span>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th><i class="bi bi-hash"></i> ID</th>
+              <th><i class="bi bi-calendar"></i> Date</th>
+              <th><i class="bi bi-cash"></i> Total</th>
+              <th><i class="bi bi-gift"></i> Avantage</th>
+              <th><i class="bi bi-traffic-light"></i> Statut</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for o in orders %}
+              <tr>
+                <td>
+                  <a href="{% url 'staff:admin_order_detail' o.id %}" class="text-decoration-none">
+                    <span class="badge bg-light text-dark border">#{{ o.id }}</span>
+                  </a>
+                </td>
+                
+                <td class="text-muted small">
+                  {{ o.created_at|date:"d/m/Y H:i" }}
+                </td>
+                
+                <td>
+                  <span class="fw-semibold text-success">
+                    {{ o.total|floatformat:0 }} FCFA
+                  </span>
+                </td>
+
+                <!-- Avantage : fidélité > promo > rien -->
+                <td>
+                  {% if o.loyalty_reward == "free_meal" %}
+                    <span class="badge" style="background: linear-gradient(135deg, #06d6a0 0%, #04a777 100%);">
+                      <i class="bi bi-gift-fill"></i> Plat gratuit
+                    </span>
+                  {% elif o.loyalty_reward == "discount_500" %}
+                    <span class="badge" style="background: linear-gradient(135deg, #06d6a0 0%, #04a777 100%);">
+                      <i class="bi bi-tag-fill"></i> Réduction 500
+                    </span>
+                  {% elif o.promo_code %}
+                    <span class="badge" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                      <i class="bi bi-tag-fill"></i> Promo
+                    </span>
+                  {% else %}
+                    <span class="text-muted small">—</span>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if o.status == "pending" %}
+                    <span class="badge bg-warning">
+                      <i class="bi bi-clock"></i> {{ o.get_status_display }}
+                    </span>
+                  {% elif o.status == "confirmed" %}
+                    <span class="badge bg-info">
+                      <i class="bi bi-check2"></i> {{ o.get_status_display }}
+                    </span>
+                  {% elif o.status == "delivered" %}
+                    <span class="badge bg-success">
+                      <i class="bi bi-check-circle-fill"></i> {{ o.get_status_display }}
+                    </span>
+                  {% elif o.status == "canceled" %}
+                    <span class="badge bg-danger">
+                      <i class="bi bi-x-circle"></i> {{ o.get_status_display }}
+                    </span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ o.get_status_display }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5">
+                  <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p class="text-muted mb-0">Aucune commande pour cet utilisateur</p>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if orders %}
+      <div class="card-footer bg-light border-top">
+        <div class="small text-muted">
+          <i class="bi bi-info-circle"></i>
+          <strong>Note :</strong> Les avantages fidélité apparaissent quand des points ont été utilisés sur la commande.
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<style>
+  /* Styles pour cette page */
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .info-row:last-child {
+    border-bottom: none;
+  }
+
+  .info-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .info-value {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .loyalty-tier {
+    padding: 1rem;
+    background: var(--bg-light);
+    border-radius: 12px;
+    transition: var(--transition);
+  }
+
+  .loyalty-tier:hover {
+    background: #e9ecef;
+    transform: translateX(4px);
+  }
+
+  .tier-progress {
+    font-size: 1.1rem;
+  }
+
+  .progress {
+    border-radius: 10px;
+    background: rgba(0,0,0,0.05);
+  }
+
+  .progress-bar {
+    border-radius: 10px;
+    transition: width 0.6s ease;
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .stat-item:last-child {
+    border-bottom: none;
+  }
+
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+
+  .stat-info {
+    flex: 1;
+  }
+
+  .stat-label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .avatar-large {
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+    }
+    50% {
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5);
+    }
+  }
+</style>
+{% endblock %}

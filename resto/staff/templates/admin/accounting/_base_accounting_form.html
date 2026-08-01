@@ -1,0 +1,74 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col-12">
+    <h1 class="h3 d-flex align-items-center gap-2">
+      <i class="bi {{ icon }}"></i>
+      {{ heading }}
+    </h1>
+    <p class="text-muted">{{ subtitle }}</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card card-clean shadow-sm">
+      <form method="post" novalidate id="accounting-main-form">
+        {% csrf_token %}
+        {% if next %}
+          <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+        <div class="card-body p-4">
+          {% for field in form %}
+            <div class="mb-4">
+              <label for="{{ field.id_for_label }}" class="form-label">
+                {{ field.label }}
+              </label>
+              {{ field }}
+              {% if field.errors %}
+                <div class="invalid-feedback d-block">
+                  {{ field.errors.0 }}
+                </div>
+              {% endif %}
+              {% if field.help_text %}
+                <small class="text-muted d-block mt-1">
+                  {{ field.help_text }}
+                </small>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </form>
+
+      <div class="card-footer bg-light p-4 d-flex gap-2">
+          <button type="submit" class="btn {{ submit_class }}" form="accounting-main-form">
+            {{ submit_label }}
+          </button>
+
+          <a href="{{ back_url }}" class="btn btn-outline-secondary">
+            Annuler
+          </a>
+
+          {% if delete_url %}
+            <form method="post" action="{{ delete_url }}" class="d-inline ms-auto" data-no-loading>
+              {% csrf_token %}
+              {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
+              {% endif %}
+              <button type="submit" class="btn btn-outline-danger">
+                Supprimer
+              </button>
+            </form>
+          {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    {% block sidebar %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Commande confirmee - Chez Mama Jackie{% endblock %}
+{% block body_class %}page-orders{% endblock %}
+
+{% block content %}
+<section class="container py-4 py-lg-5 orders-shell">
+  <div class="row justify-content-center">
+    <div class="col-xl-9">
+      <article class="card checkout-success-card border-0 shadow-lg">
+        <div class="card-body p-4 p-lg-5">
+          <div class="success-hero text-center mb-4">
+            <span class="success-icon"><i class="bi bi-check2-circle"></i></span>
+            <p class="section-kicker mt-3 mb-2">Commande enregistree</p>
+            <h1 class="h3 mb-2">Merci pour votre commande</h1>
+            <p class="text-muted mb-0">
+              Votre commande <strong class="text-primary">#{{ order.id }}</strong> a ete enregistree avec succes.
+            </p>
+          </div>
+
+          <div class="row g-4">
+            <div class="col-lg-7">
+              <section class="order-block">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h2 class="h5 mb-0">Details de la commande</h2>
+                  <span class="badge bg-success">{{ order.status|upper }}</span>
+                </div>
+
+                <div class="list-group mb-3">
+                  {% for it in order_items %}
+                    <div class="list-group-item">
+                      <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div class="flex-grow-1">
+                          <div class="fw-semibold">{{ it.meal_name }}</div>
+                          <div class="text-muted small">
+                            Variante: {{ it.variant_code }} • Quantite: {{ it.quantity }} x {{ it.unit_price }} FCFA
+                          </div>
+
+                          {% if it.supplements %}
+                            <div class="small text-primary mt-2">
+                              <i class="bi bi-plus-circle"></i>
+                              Supplements:
+                              <ul class="mb-0 ps-3 mt-1">
+                                {% for sup in it.supplements %}
+                                  <li>{{ sup.name }} x {{ sup.quantity }} = {{ sup.subtotal }} FCFA</li>
+                                {% endfor %}
+                              </ul>
+                            </div>
+                          {% endif %}
+                        </div>
+                        <div class="text-end">
+                          <div class="fw-semibold text-nowrap">{{ it.subtotal }} FCFA</div>
+                          <div class="text-muted small">total</div>
+                        </div>
+                      </div>
+                    </div>
+                  {% empty %}
+                    <div class="list-group-item text-muted text-center">Aucun item dans cette commande.</div>
+                  {% endfor %}
+                </div>
+
+                <div class="card bg-light border-0">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                      <span class="text-muted">Sous-total</span>
+                      <span class="fw-semibold">{{ order_summary.subtotal }} FCFA</span>
+                    </div>
+
+                    {% if order_summary.has_discount %}
+                      <div class="d-flex justify-content-between mb-2 text-success">
+                        <span>
+                          <i class="bi bi-tag-fill"></i>
+                          Remise
+                          {% if order_summary.promo_code %}
+                            <span class="badge bg-success">{{ order_summary.promo_code }}</span>
+                          {% endif %}
+                        </span>
+                        <span class="fw-semibold">- {{ order_summary.discount_total }} FCFA</span>
+                      </div>
+                    {% endif %}
+
+                    <hr class="my-2">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span class="fw-bold">Total paye</span>
+                      <span class="fw-bold fs-4 text-primary">{{ order_summary.total }} FCFA</span>
+                    </div>
+                  </div>
+                </div>
+
+                {% if loyalty_reward == "free_meal" %}
+                  <div class="alert alert-success py-2 mt-3 mb-0">
+                    <i class="bi bi-gift-fill"></i>
+                    <strong>Felicitations :</strong> votre plat gratuit a ete applique.
+                  </div>
+                {% elif loyalty_reward == "discount_500" %}
+                  <div class="alert alert-success py-2 mt-3 mb-0">
+                    <i class="bi bi-tag-fill"></i>
+                    <strong>Felicitations :</strong> reduction de {{ order_summary.loyalty_discount|floatformat:0 }} FCFA appliquee.
+                  </div>
+                {% endif %}
+              </section>
+            </div>
+
+            <div class="col-lg-5">
+              <section class="order-block h-100 d-flex flex-column">
+                <h2 class="h5 mb-3">Informations de livraison</h2>
+                <div class="delivery-box mb-3">
+                  <div class="small"><strong>Nom :</strong> {{ order.customer_name }}</div>
+                  <div class="small mt-1"><strong>Telephone :</strong> {{ order.phone }}</div>
+                  <div class="small mt-2"><strong>Adresse :</strong></div>
+                  <div class="small mt-1">{{ order.address|linebreaks }}</div>
+                </div>
+
+                <div class="d-grid gap-2 mt-auto">
+                  <a href="{% url 'shop:meal_list' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-arrow-left-circle"></i>
+                    Retour au menu
+                  </a>
+                  <a href="{% url 'comptes:profile' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-person-circle"></i>
+                    Voir mon profil
+                  </a>
+                </div>
+
+                <p class="text-muted small mt-3 mb-0 text-center">
+                  <i class="bi bi-clock"></i>
+                  Vous recevrez votre repas sous peu.
+                </p>
+              </section>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+{% endblock %}

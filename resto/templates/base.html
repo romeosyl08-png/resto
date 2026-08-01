@@ -1,0 +1,213 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>{% block title %}Chez Mama Jackie - Restaurant Africain à Abidjan{% endblock %}</title>
+
+  <meta name="description" content="Commandez les meilleurs plats africains à Abidjan. Menu du jour, livraison rapide.">
+  <meta name="keywords" content="restaurant, africain, abidjan, plat du jour, livraison">
+
+  <meta name="theme-color" content="#f76b1c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="{% static 'manifest.json' %}">
+
+  <link rel="icon" href="{% static 'icons/logo.ico' %}" type="image/x-icon">
+  <link rel="apple-touch-icon" href="{% static 'apple-touch-icon.png' %}">
+
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{% static 'shop/css/app.css' %}">
+
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body class="site-shell {% block body_class %}{% endblock %}" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <a href="#main-content" class="visually-hidden-focusable">Aller au contenu principal</a>
+
+  {% if not request.COOKIES.pushAccepted %}
+  <aside id="push-popup" role="dialog" aria-labelledby="push-title" aria-describedby="push-desc">
+    <p id="push-title" class="popup-title">Notifications</p>
+    <p id="push-desc" class="popup-desc">Recevoir le menu du jour automatiquement ?</p>
+    <div class="popup-actions">
+      <button id="push-yes" type="button" class="btn btn-primary" aria-label="Accepter les notifications">Oui</button>
+      <button id="push-later" type="button" class="btn btn-outline-secondary" aria-label="Peut-être plus tard">Plus tard</button>
+    </div>
+  </aside>
+  {% endif %}
+
+  {% with current=request.resolver_match.url_name %}
+  <nav class="navbar navbar-expand-lg navbar-food" role="navigation" aria-label="Navigation principale">
+    <div class="container nav-wrap">
+      <a class="navbar-brand" href="{% url 'shop:meal_list' %}" aria-label="Retour à l'accueil">
+        <span class="brand-mark">CMJ</span>
+        <span class="brand-text">Chez Mama Jackie</span>
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Basculer la navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav nav-main me-auto">
+          <li class="nav-item">
+            <a class="nav-link {% if current == 'meal_list' or current == 'meal_list_by_category' or current == 'meal_detail' %}is-active{% endif %}" href="{% url 'shop:meal_list' %}" aria-label="Voir le menu">
+              Menu
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if current == 'weekly_menu' %}is-active{% endif %}" href="{% url 'shop:weekly_menu' %}" aria-label="Voir le menu de la semaine">
+              Semaine
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link position-relative {% if current == 'cart_detail' or current == 'checkout' %}is-active{% endif %}" href="{% url 'orders:cart_detail' %}" aria-label="Voir le panier">
+              Panier
+              {% if cart_count and cart_count > 0 %}
+                <span class="cart-count" aria-label="{{ cart_count }} articles dans le panier">{{ cart_count }}</span>
+              {% endif %}
+            </a>
+          </li>
+        </ul>
+
+        <ul class="navbar-nav nav-user ms-auto">
+        {% if user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link {% if current == 'profile' %}is-active{% endif %}" href="{% url 'comptes:profile' %}" aria-label="Mon profil">
+              <i class="bi bi-person"></i>
+              {{ user.username }}
+            </a>
+          </li>
+          {% if is_manager %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'staff:admin_dashboard' %}" aria-label="Staff">
+                Admin
+              </a>
+            </li>
+          {% endif %}
+          <li class="nav-item">
+            <form method="post" action="{% url 'comptes:logout' %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-link nav-link" aria-label="Se déconnecter">
+                Déconnexion
+              </button>
+            </form>
+          </li>
+        {% else %}
+          <li class="nav-item">
+            <a class="nav-link {% if current == 'login' %}is-active{% endif %}" href="{% url 'comptes:login' %}" aria-label="Se connecter">
+              Connexion
+            </a>
+          </li>
+        {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  {% if messages %}
+    <section class="container flash-stack" aria-live="polite" aria-label="Messages">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }}" role="status">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </section>
+  {% endif %}
+
+  <main id="main-content" class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <nav class="bottom-nav" role="navigation" aria-label="Navigation mobile">
+    <a class="bn-item {% if current == 'meal_list' or current == 'meal_list_by_category' or current == 'meal_detail' %}is-active{% endif %}" href="{% url 'shop:meal_list' %}" aria-label="Menu">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+      </svg>
+      <span>Menu</span>
+    </a>
+
+    <a class="bn-item {% if current == 'cart_detail' or current == 'checkout' %}is-active{% endif %}" href="{% url 'orders:cart_detail' %}" aria-label="Panier">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="9" cy="21" r="1"/>
+        <circle cx="20" cy="21" r="1"/>
+        <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+      </svg>
+      <span>Panier</span>
+      {% if cart_count and cart_count > 0 %}
+        <span class="cart-count" aria-label="{{ cart_count }} articles">{{ cart_count }}</span>
+      {% endif %}
+    </a>
+
+    {% if user.is_authenticated %}
+      <a class="bn-item {% if current == 'profile' %}is-active{% endif %}" href="{% url 'comptes:profile' %}" aria-label="Profil">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span>Profil</span>
+      </a>
+
+      {% if is_manager %}
+        <a class="nav-link" href="{% url 'staff:admin_dashboard' %}" aria-label="Staff">
+          <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+          </svg>
+          <span>Admin</span>
+        </a>
+      {% endif %}
+      
+    {% else %}
+      <a class="bn-item {% if current == 'login' %}is-active{% endif %}" href="{% url 'comptes:login' %}" aria-label="Connexion">
+        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/>
+          <polyline points="10 17 15 12 10 7"/>
+          <line x1="15" y1="12" x2="3" y2="12"/>
+        </svg>
+        <span>Connexion</span>
+      </a>
+    {% endif %}
+  </nav>
+  {% endwith %}
+
+  <button id="install-btn" class="install-fab btn btn-primary" style="display:none;" aria-label="Installer l'application">
+    <i class="bi bi-phone"></i>
+    Installer l'app
+  </button>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+          crossorigin="anonymous"></script>
+
+  <script src="{% static 'install.js' %}" defer></script>
+  <script src="{% static 'push.js' %}" defer></script>
+
+  {% block extra_js %}{% endblock %}
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(registration => console.log('SW registered:', registration))
+          .catch(error => console.log('SW registration failed:', error));
+      });
+    }
+  </script>
+</body>
+</html>
