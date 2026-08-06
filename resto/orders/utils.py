@@ -17,7 +17,7 @@ def build_cart_summary(cart):
     }
 
 
-def meals_by_price(user):
+def products_by_price(user):
     qs = (
         Order.objects
         .filter(user=user, status="delivered")

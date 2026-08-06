@@ -6,7 +6,7 @@ from .forms import CheckoutForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from decimal import Decimal
-from shop.models import Meal, MealVariant, Supplement
+from shop.models import Product, ProductVariant, Supplement
 from django.utils import timezone
 from marketing.services import PromoService, LoyaltyService
 from shop.utils import resolve_order_phase, OrderPhase
@@ -18,7 +18,7 @@ from django.contrib import messages
 
 
 @require_POST
-def cart_add(request, meal_id):
+def cart_add(request, product_id):
     """Ajoute un article au panier avec ses suppléments"""
     cart = Cart(request)
     variant_code = request.POST.get("variant", "standard")
@@ -51,7 +51,7 @@ def cart_add(request, meal_id):
 
     # Ajoute au panier
     cart.add(
-        meal_id=meal_id,
+        product_id=product_id,
         variant_code=variant_code,
         quantity=qty,
         supplements=sup_list
@@ -63,10 +63,10 @@ def cart_add(request, meal_id):
     return redirect("orders:cart_detail")
 
 
-def cart_remove(request, meal_id, variant_code):
+def cart_remove(request, product_id, variant_code):
     """Supprime un article du panier"""
     cart = Cart(request)
-    cart.remove(meal_id, variant_code)
+    cart.remove(product_id, variant_code)
     
     # FIX BUG #16: Message de confirmation
     messages.info(request, "Article retiré du panier")
@@ -98,7 +98,7 @@ def cart_remove_promo(request):
 
 
 @require_POST
-def cart_update_supplements(request, meal_id, variant_code):
+def cart_update_supplements(request, product_id, variant_code):
     """Met à jour les quantités de suppléments pour un item du panier"""
     cart = Cart(request)
     supplement_ids = request.POST.getlist("supplements")
@@ -113,7 +113,7 @@ def cart_update_supplements(request, meal_id, variant_code):
             qty = 1
         qty_map[sid] = qty
 
-    cart.set_supplements(meal_id, variant_code, qty_map)
+    cart.set_supplements(product_id, variant_code, qty_map)
     messages.success(request, "Suppléments mis à jour")
     return redirect("orders:cart_detail")
 
@@ -128,26 +128,26 @@ def cart_detail(request):
     reasons = set()
     
     for item in list(cart.cart.values()):
-        meal = Meal.objects.filter(id=item["meal_id"]).first()
-        if not meal:
+        product = Product.objects.filter(id=item["product_id"]).first()
+        if not product:
             # FIX BUG #15: Gestion explicite des repas manquants
-            cart.remove(item["meal_id"], item.get("variant_code", "standard"))
+            cart.remove(item["product_id"], item.get("variant_code", "standard"))
             removed += 1
             reasons.add("not_found")
             continue
             
         variant_code = item.get("variant_code", "standard")
-        variants = MealVariant.objects.filter(
-            meal_id=item["meal_id"],
+        variants = ProductVariant.objects.filter(
+            product_id=item["product_id"],
             code=variant_code,
             is_active=True
         )
 
-        phase = resolve_order_phase(now_time=now.time(), meal=meal, variants=variants)
+        phase = resolve_order_phase(now_time=now.time(), product=product, variants=variants)
         ui = OrderPhase.OPEN if phase == OrderPhase.OPEN else phase
         
         if ui != OrderPhase.OPEN:
-            cart.remove(item["meal_id"], variant_code)
+            cart.remove(item["product_id"], variant_code)
             removed += 1
             if phase in (OrderPhase.CLOSED, OrderPhase.PREOPEN):
                 reasons.add("closed")
@@ -191,7 +191,7 @@ def checkout(request):
 
     if len(cart) == 0:
         messages.warning(request, "Votre panier est vide.")
-        return redirect("shop:meal_list")
+        return redirect("shop:product_list")
 
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
@@ -230,23 +230,23 @@ def checkout(request):
                 # Vérification stock et phase pour chaque item
                 for item in cart:
                     try:
-                        v = MealVariant.objects.select_for_update().get(
-                            meal_id=item["meal"].id,
+                        v = ProductVariant.objects.select_for_update().get(
+                            product_id=item["product"].id,
                             code=item["variant_code"],
                             is_active=True
                         )
-                    except MealVariant.DoesNotExist:
+                    except ProductVariant.DoesNotExist:
                         messages.error(
                             request,
-                            f"La variante « {item['meal'].name} ({item['variant_code']}) » n'existe plus."
+                            f"La variante « {item['product'].name} ({item['variant_code']}) » n'existe plus."
                         )
                         return redirect("orders:cart_detail")
 
                     phase = resolve_order_phase(
                         now_time=now.time(),
-                        meal=item["meal"],
-                        variants=MealVariant.objects.filter(
-                            meal_id=item["meal"].id,
+                        product=item["product"],
+                        variants=ProductVariant.objects.filter(
+                            product_id=item["product"].id,
                             code=item["variant_code"],
                             is_active=True
                         )
@@ -254,18 +254,18 @@ def checkout(request):
                     if phase != OrderPhase.OPEN:
                         messages.error(
                             request,
-                            f"Le plat « {item['meal'].name} » n'est plus commandable."
+                            f"Le plat « {item['product'].name} » n'est plus commandable."
                         )
                         return redirect("orders:cart_detail")
 
                     if v.stock < item["quantity"]:
                         messages.error(
                             request,
-                            f"Stock insuffisant pour « {item['meal'].name} ({v.code}) »."
+                            f"Stock insuffisant pour « {item['product'].name} ({v.code}) »."
                         )
                         return redirect("orders:cart_detail")
 
-                    locked[(v.meal_id, v.code)] = v
+                    locked[(v.product_id, v.code)] = v
 
                 # Créer la commande
                 order = Order.objects.create(
@@ -283,7 +283,7 @@ def checkout(request):
                 for item in cart:
                     order_item = OrderItem.objects.create(
                         order=order,
-                        meal=item["meal"],
+                        product=item["product"],
                         variant_code=item["variant_code"],
                         quantity=item["quantity"],
                         unit_price=item["unit_price"],
@@ -302,8 +302,8 @@ def checkout(request):
 
                 # Décrémente le stock
                 for item in cart:
-                    MealVariant.objects.filter(
-                        meal_id=item["meal"].id,
+                    ProductVariant.objects.filter(
+                        product_id=item["product"].id,
                         code=item["variant_code"],
                         is_active=True,
                     ).update(stock=F("stock") - item["quantity"])
@@ -327,7 +327,7 @@ def checkout(request):
             cart.clear()  # Vide le panier
 
             order = Order.objects.select_related("user").prefetch_related(
-                "items__meal",
+                "items__product",
                 "items__supplements__supplement"
             ).get(pk=order.pk)
 
@@ -341,7 +341,7 @@ def checkout(request):
                         "subtotal": sup.subtotal(),
                     })
                 order_items.append({
-                    "meal_name": it.meal.name,
+                    "product_name": it.product.name,
                     "variant_code": it.variant_code,
                     "quantity": it.quantity,
                     "unit_price": it.unit_price,

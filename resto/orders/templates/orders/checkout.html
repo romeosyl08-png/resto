@@ -22,7 +22,7 @@
             {% for item in cart %}
               <li class="list-group-item d-flex justify-content-between align-items-start gap-3">
                 <div class="flex-grow-1">
-                  <div class="fw-semibold">{{ item.meal.name }}</div>
+                  <div class="fw-semibold">{{ item.product.name }}</div>
                   <div class="text-muted small">
                     Variante: {{ item.variant_code }} • Qte: {{ item.quantity }}
                     {% if item.supplements %}

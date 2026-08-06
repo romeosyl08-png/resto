@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from orders.models import Order
-from shop.models import Category, Meal, MealVariant
+from shop.models import Category, product, productVariant
 from staff.models import Debt
 
 
@@ -59,15 +59,15 @@ class StaffViewsRegressionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, f"Commande #{order.id}")
 
-    def test_meal_list_renders_variant_price_range(self):
+    def test_product_list_renders_variant_price_range(self):
         self.client.force_login(self.manager)
 
         category = Category.objects.create(name="Plats", slug="plats")
-        meal = Meal.objects.create(category=category, name="Riz", slug="riz")
-        MealVariant.objects.create(meal=meal, code="basic", label="Basic", price=500, stock=10, is_active=True)
-        MealVariant.objects.create(meal=meal, code="standard", label="Standard", price=1000, stock=10, is_active=True)
+        product = product.objects.create(category=category, name="Riz", slug="riz")
+        productVariant.objects.create(product=product, code="basic", label="Basic", price=500, stock=10, is_active=True)
+        productVariant.objects.create(product=product, code="standard", label="Standard", price=1000, stock=10, is_active=True)
 
-        response = self.client.get(reverse("staff:meal_list"))
+        response = self.client.get(reverse("staff:product_list"))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "500 - 1000 FCFA")

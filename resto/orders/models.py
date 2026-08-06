@@ -1,7 +1,7 @@
 from decimal import Decimal
 from django.conf import settings
 from django.db import models
-from shop.models import Meal, Supplement
+from shop.models import Product, Supplement
 
 
 
@@ -154,7 +154,7 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
-    meal = models.ForeignKey(Meal, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
     variant_code = models.CharField(max_length=20, default="standard")
     quantity = models.PositiveIntegerField(default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -167,7 +167,7 @@ class OrderItem(models.Model):
         return base + supplements_total
     
     def __str__(self):
-        return f"{self.meal.name} ({self.variant_code}) x{self.quantity}"
+        return f"{self.product.name} ({self.variant_code}) x{self.quantity}"
 
 
 
@@ -189,4 +189,4 @@ class OrderItemSupplement(models.Model):
         return self.quantity * self.unit_price
     
     def __str__(self):
-        return f"{self.supplement.name} x{self.quantity} pour {self.order_item.meal.name}"
+        return f"{self.supplement.name} x{self.quantity} pour {self.order_item.product.name}"

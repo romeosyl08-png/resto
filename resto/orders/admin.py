@@ -84,8 +84,8 @@ class OrderItemSupplementInline(admin.TabularInline):
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    raw_id_fields = ("meal",)
-    fields = ("meal", "variant_code", "quantity", "unit_price", "supplements_summary", "subtotal_display")
+    raw_id_fields = ("product",)
+    fields = ("product", "variant_code", "quantity", "unit_price", "supplements_summary", "subtotal_display")
     readonly_fields = ("supplements_summary", "subtotal_display")
 
     def supplements_summary(self, obj):
@@ -244,7 +244,7 @@ class OrderAdmin(admin.ModelAdmin):
 class OrderItemAdmin(admin.ModelAdmin):
     list_display = (
         "order", 
-        "meal", 
+        "product", 
         "variant_code", 
         "quantity", 
         "unit_price", 
@@ -252,8 +252,8 @@ class OrderItemAdmin(admin.ModelAdmin):
         "subtotal_display"
     )
     list_filter = ("variant_code", "order__status")
-    raw_id_fields = ("order", "meal")
-    search_fields = ("order__id", "meal__name", "variant_code")
+    raw_id_fields = ("order", "product")
+    search_fields = ("order__id", "product__name", "variant_code")
     
     inlines = [OrderItemSupplementInline]
 

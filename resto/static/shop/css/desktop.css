@@ -25,11 +25,11 @@
     gap: 1.2rem;
   }
 
-  .meal-main-image {
+  .product-main-image {
     min-height: 520px;
   }
 
-  .meal-order-card .card-body {
+  .product-order-card .card-body {
     padding: 2rem;
   }
 }
@@ -44,12 +44,12 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .meal-detail-shell {
+  .product-detail-shell {
     max-width: 1260px;
     margin-inline: auto;
   }
 
-  .meal-order-card {
+  .product-order-card {
     position: sticky;
     top: 100px;
   }

@@ -1,4 +1,4 @@
-from .models import Meal, MealVariant
+from .models import Product, ProductVariant
 from enum import Enum
 from datetime import time, timedelta
 from django.utils import timezone
@@ -37,13 +37,13 @@ def time_in_range(start: time, end: time, now: time) -> bool:
         return now >= start or now < end
 
 
-def resolve_order_phase(*, now_time: time, meal=None, variants=None) -> OrderPhase:
+def resolve_order_phase(*, now_time: time, product=None, variants=None) -> OrderPhase:
     """
     Renvoie la phase de commande actuelle pour un plat donné
     """
     variants = variants or []
 
-    if not meal or not meal.is_active:
+    if not product or not product.is_active:
         return OrderPhase.INACTIVE
 
     any_stock = any(v.stock > 0 for v in variants)
@@ -72,13 +72,13 @@ DEFAULT_VARIANTS = [
     {"code": "premium", "label": "Premium", "price": 1500},
 ]
 
-def ensure_meal_variants(meal):
-    if meal.variants.exists():
+def ensure_product_variants(product):
+    if product.variants.exists():
         return
 
-    MealVariant.objects.bulk_create([
-        MealVariant(
-            meal=meal,
+    ProductVariant.objects.bulk_create([
+        ProductVariant(
+            product=product,
             code=v["code"],
             label=v["label"],
             price=v["price"],
@@ -89,11 +89,11 @@ def ensure_meal_variants(meal):
     ])
 
 
-def sync_meal_availability():
+def sync_product_availability():
     today = service_date(timezone.localtime()).weekday()
 
-    for meal in Meal.objects.all():
-        available = today in (meal.available_weekdays or [])
-        if meal.is_active != available:
-            meal.is_active = available
-            meal.save(update_fields=["is_active"])
+    for product in Product.objects.all():
+        available = today in (product.available_weekdays or [])
+        if product.is_active != available:
+            product.is_active = available
+            product.save(update_fields=["is_active"])

@@ -31,7 +31,7 @@
                     <div class="list-group-item">
                       <div class="d-flex justify-content-between align-items-start gap-3">
                         <div class="flex-grow-1">
-                          <div class="fw-semibold">{{ it.meal_name }}</div>
+                          <div class="fw-semibold">{{ it.product_name }}</div>
                           <div class="text-muted small">
                             Variante: {{ it.variant_code }} • Quantite: {{ it.quantity }} x {{ it.unit_price }} FCFA
                           </div>
@@ -88,7 +88,7 @@
                   </div>
                 </div>
 
-                {% if loyalty_reward == "free_meal" %}
+                {% if loyalty_reward == "free_product" %}
                   <div class="alert alert-success py-2 mt-3 mb-0">
                     <i class="bi bi-gift-fill"></i>
                     <strong>Felicitations :</strong> votre plat gratuit a ete applique.
@@ -113,7 +113,7 @@
                 </div>
 
                 <div class="d-grid gap-2 mt-auto">
-                  <a href="{% url 'shop:meal_list' %}" class="btn btn-primary btn-lg">
+                  <a href="{% url 'shop:product_list' %}" class="btn btn-primary btn-lg">
                     <i class="bi bi-arrow-left-circle"></i>
                     Retour au menu
                   </a>

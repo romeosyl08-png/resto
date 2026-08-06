@@ -19,10 +19,10 @@ urlpatterns = [
 
     path("referrals/", views.referral_dashboard, name="referral_dashboard"),
 
-    path("meals/", views.meal_list, name="meal_list"),
-    path("meals/new/", views.meal_create, name="meal_create"),
-    path("meals/<int:meal_id>/edit/", views.meal_update, name="meal_update"),
-    path("meals/<int:meal_id>/delete/", views.meal_delete, name="meal_delete"),
+    path("products/", views.product_list, name="product_list"),
+    path("products/new/", views.product_create, name="product_create"),
+    path("products/<int:product_id>/edit/", views.product_update, name="product_update"),
+    path("products/<int:product_id>/delete/", views.product_delete, name="product_delete"),
 
     # Accounting Ledger
     path("accounting/", views.accounting_ledger, name="accounting_ledger"),

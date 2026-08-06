@@ -58,7 +58,7 @@ class Migration(migrations.Migration):
                 ('variant_code', models.CharField(default='standard', max_length=20)),
                 ('quantity', models.PositiveIntegerField(default=1)),
                 ('unit_price', models.DecimalField(decimal_places=2, max_digits=10)),
-                ('meal', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='shop.meal')),
+                ('product', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='shop.product')),
                 ('order', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='orders.order')),
             ],
         ),

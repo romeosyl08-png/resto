@@ -90,10 +90,10 @@
       </div>
       <div class="stat-card-content">
         <div class="stat-card-label">Top plat du jour</div>
-        {% if top_meals %}
-          <div class="stat-card-value-text">{{ top_meals.0.meal__name|truncatechars:20 }}</div>
+        {% if top_products %}
+          <div class="stat-card-value-text">{{ top_products.0.product__name|truncatechars:20 }}</div>
           <div class="stat-card-trend">
-            <i class="bi bi-arrow-up-circle"></i> {{ top_meals.0.quantity_sold }} vendu(s)
+            <i class="bi bi-arrow-up-circle"></i> {{ top_products.0.quantity_sold }} vendu(s)
           </div>
         {% else %}
           <div class="stat-card-value-text text-muted">Aucune vente</div>
@@ -193,7 +193,7 @@
 
                 <!-- Avantage: fidélité / promo -->
                 <td>
-                  {% if order.loyalty_reward == "free_meal" %}
+                  {% if order.loyalty_reward == "free_product" %}
                     <span class="badge" style="background: linear-gradient(135deg, #06d6a0 0%, #04a777 100%);">
                       <i class="bi bi-gift-fill"></i> Plat gratuit
                     </span>
@@ -272,9 +272,9 @@
         </h2>
       </div>
       <div class="card-body p-0">
-        {% if top_meals %}
+        {% if top_products %}
           <div class="list-group list-group-flush">
-            {% for m in top_meals %}
+            {% for m in top_products %}
               <div class="list-group-item d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-3">
                   <div class="rank-badge">
@@ -289,7 +289,7 @@
                     {% endif %}
                   </div>
                   <div>
-                    <div class="fw-semibold">{{ m.meal__name }}</div>
+                    <div class="fw-semibold">{{ m.product__name }}</div>
                     <div class="text-muted small">
                       <i class="bi bi-box"></i> {{ m.quantity_sold }} vendu(s)
                     </div>
@@ -318,7 +318,7 @@
           <h2 class="h6 mb-0">
             <i class="bi bi-egg-fried"></i> Gestion des plats
           </h2>
-          <a class="btn btn-sm btn-dark" href="{% url 'staff:meal_create' %}">
+          <a class="btn btn-sm btn-dark" href="{% url 'staff:product_create' %}">
             <i class="bi bi-plus-circle"></i> Nouveau
           </a>
         </div>
@@ -336,20 +336,20 @@
             </tr>
           </thead>
           <tbody>
-            {% for meal in meals %}
+            {% for product in products %}
               <tr>
                 <td>
-                  <div class="fw-semibold">{{ meal.name|truncatechars:25 }}</div>
+                  <div class="fw-semibold">{{ product.name|truncatechars:25 }}</div>
                 </td>
                 <td>
-                  <span class="badge bg-light text-dark">{{ meal.category.name }}</span>
+                  <span class="badge bg-light text-dark">{{ product.category.name }}</span>
                 </td>
                 <td>
-                  {% if meal.price_min %}
-                    {% if meal.price_max and meal.price_max != meal.price_min %}
-                      <span class="fw-semibold text-success">{{ meal.price_min|floatformat:0 }} – {{ meal.price_max|floatformat:0 }}</span>
+                  {% if product.price_min %}
+                    {% if product.price_max and product.price_max != product.price_min %}
+                      <span class="fw-semibold text-success">{{ product.price_min|floatformat:0 }} – {{ product.price_max|floatformat:0 }}</span>
                     {% else %}
-                      <span class="fw-semibold text-success">{{ meal.price_min|floatformat:0 }}</span>
+                      <span class="fw-semibold text-success">{{ product.price_min|floatformat:0 }}</span>
                     {% endif %}
                     <span class="text-muted small">FCFA</span>
                   {% else %}
@@ -357,7 +357,7 @@
                   {% endif %}
                 </td>
                 <td>
-                  {% if meal.is_active %}
+                  {% if product.is_active %}
                     <span class="badge bg-success">
                       <i class="bi bi-check-circle"></i> Actif
                     </span>
@@ -368,7 +368,7 @@
                   {% endif %}
                 </td>
                 <td class="text-end">
-                  <a class="btn btn-sm btn-outline-primary" href="{% url 'staff:meal_update' meal.id %}" title="Éditer">
+                  <a class="btn btn-sm btn-outline-primary" href="{% url 'staff:product_update' product.id %}" title="Éditer">
                     <i class="bi bi-pencil"></i>
                   </a>
                 </td>
@@ -387,9 +387,9 @@
         </table>
       </div>
 
-      {% if meals %}
+      {% if products %}
       <div class="card-footer bg-light text-center">
-        <a href="{% url 'staff:meal_list' %}" class="text-decoration-none small">
+        <a href="{% url 'staff:product_list' %}" class="text-decoration-none small">
           <i class="bi bi-list-ul"></i> Voir tous les plats
         </a>
       </div>

@@ -28,7 +28,7 @@
                   <div class="card-body">
                     <div class="cart-item-top">
                       <div>
-                        <h2 class="h6 mb-1">{{ item.meal.name }}</h2>
+                        <h2 class="h6 mb-1">{{ item.product.name }}</h2>
                         <p class="small text-muted mb-2">
                           Variante: {{ item.variant_code|default:"standard" }}
                           <br>
@@ -36,7 +36,7 @@
                         </p>
 
                         {% if item.supplements %}
-                          <form class="cart-supp-form" method="post" action="{% url 'orders:cart_update_supplements' item.meal_id item.variant_code %}">
+                          <form class="cart-supp-form" method="post" action="{% url 'orders:cart_update_supplements' item.product_id item.variant_code %}">
                             {% csrf_token %}
                             <div class="vstack gap-2">
                               {% for sup in item.supplements %}
@@ -44,15 +44,15 @@
                                   <input type="hidden" name="supplements" value="{{ sup.id }}">
                                   <div class="supp-name small">{{ sup.name }}</div>
                                   <div class="supp-controls">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-qty" data-target="sup-{{ item.meal_id }}-{{ sup.id }}" data-delta="-1" aria-label="Diminuer">-</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-qty" data-target="sup-{{ item.product_id }}-{{ sup.id }}" data-delta="-1" aria-label="Diminuer">-</button>
                                     <input type="number"
-                                           id="sup-{{ item.meal_id }}-{{ sup.id }}"
+                                           id="sup-{{ item.product_id }}-{{ sup.id }}"
                                            name="qty_{{ sup.id }}"
                                            value="{{ sup.quantity }}"
                                            min="1"
                                            max="20"
                                            class="form-control form-control-sm text-center">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-qty" data-target="sup-{{ item.meal_id }}-{{ sup.id }}" data-delta="1" aria-label="Augmenter">+</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-qty" data-target="sup-{{ item.product_id }}-{{ sup.id }}" data-delta="1" aria-label="Augmenter">+</button>
                                   </div>
                                   <div class="small text-muted text-nowrap">{{ sup.unit_price }} FCFA</div>
                                 </div>
@@ -70,8 +70,8 @@
                     </div>
 
                     <div class="d-flex gap-2 mt-3">
-                      <a class="btn btn-sm btn-outline-secondary" href="{% url 'shop:meal_detail' item.meal.slug %}">Details</a>
-                      <a class="btn btn-sm btn-outline-danger" href="{% url 'orders:cart_remove' item.meal_id item.variant_code %}">Retirer</a>
+                      <a class="btn btn-sm btn-outline-secondary" href="{% url 'shop:product_detail' item.product.slug %}">Details</a>
+                      <a class="btn btn-sm btn-outline-danger" href="{% url 'orders:cart_remove' item.product_id item.variant_code %}">Retirer</a>
                     </div>
                   </div>
                 </article>
@@ -108,7 +108,7 @@
               <i class="bi bi-cart-x empty-state-icon"></i>
               <h2 class="h4 mt-3 mb-2">Votre panier est vide</h2>
               <p class="text-muted mb-4">Ajoutez un plat pour continuer votre commande.</p>
-              <a href="{% url 'shop:meal_list' %}" class="btn btn-primary">Voir le menu</a>
+              <a href="{% url 'shop:product_list' %}" class="btn btn-primary">Voir le menu</a>
             </article>
           {% endif %}
         </div>
@@ -146,7 +146,7 @@
             </a>
           {% endif %}
 
-          <a class="btn btn-outline-secondary w-100" href="{% url 'shop:meal_list' %}">
+          <a class="btn btn-outline-secondary w-100" href="{% url 'shop:product_list' %}">
             <i class="bi bi-arrow-left"></i>
             Continuer mes achats
           </a>

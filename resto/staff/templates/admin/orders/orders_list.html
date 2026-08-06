@@ -161,7 +161,7 @@
                     <span class="badge bg-danger">✗ Annulée</span>
                   {% endif %}
                   
-                  {% if order.loyalty_reward == "free_meal" %}
+                  {% if order.loyalty_reward == "free_product" %}
                     <span class="badge bg-success">🎁 Plat gratuit</span>
                   {% elif order.loyalty_reward == "discount_500" %}
                     <span class="badge bg-success">🏷️ Réduction 500</span>
@@ -226,7 +226,7 @@
                     <div class="row align-items-center">
                       
                       <div class="col-md-4">
-                        <div class="fw-semibold">{{ item.meal.name }}</div>
+                        <div class="fw-semibold">{{ item.product.name }}</div>
                         <div class="small text-muted">
                           Variante: <span class="badge bg-secondary">{{ item.variant_code }}</span>
                         </div>

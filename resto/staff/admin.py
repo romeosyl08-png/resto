@@ -1,10 +1,10 @@
 from django.contrib import admin
 
-from .models import Debt, Expense, OffSiteSale, OffSiteSaleMeal, OffSiteSaleSupplement
+from .models import Debt, Expense, OffSiteSale, OffSiteSaleproduct, OffSiteSaleSupplement
 
 
-class OffSiteSaleMealInline(admin.TabularInline):
-    model = OffSiteSaleMeal
+class OffSiteSaleproductInline(admin.TabularInline):
+    model = OffSiteSaleproduct
     extra = 0
 
 
@@ -27,7 +27,7 @@ class OffSiteSaleAdmin(admin.ModelAdmin):
     list_filter = ("payment_method", "date")
     search_fields = ("description", "notes")
     date_hierarchy = "date"
-    inlines = (OffSiteSaleMealInline, OffSiteSaleSupplementInline)
+    inlines = (OffSiteSaleproductInline, OffSiteSaleSupplementInline)
 
 
 @admin.register(Debt)

@@ -10,7 +10,7 @@ from django.views.generic import TemplateView
 
 
 sitemaps = {
-    'meals': sitemaps.MealSitemap,
+    'products': sitemaps.ProductSitemap,
 }
 
 

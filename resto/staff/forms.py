@@ -2,15 +2,15 @@ from django import forms
 from django.forms import inlineformset_factory
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from shop.models import Meal, MealVariant, WEEKDAY_CHOICES, Supplement
-from .models import Expense, OffSiteSale, OffSiteSaleMeal, OffSiteSaleSupplement, Debt
+from shop.models import Product, ProductVariant, WEEKDAY_CHOICES, Supplement
+from .models import Expense, OffSiteSale, OffSiteSaleproduct, OffSiteSaleSupplement, Debt
 
 User = get_user_model()
 
 
 
 
-class MealForm(forms.ModelForm):
+class ProductForm(forms.ModelForm):
     weekdays = forms.MultipleChoiceField(
         choices=WEEKDAY_CHOICES,
         widget=forms.CheckboxSelectMultiple(attrs={"class": "form-check-input"}),
@@ -19,7 +19,7 @@ class MealForm(forms.ModelForm):
     )
 
     class Meta:
-        model = Meal
+        model = Product
         fields = ["category", "name", "slug", "description", "stock", "is_active", "image"]
         widgets = {
             "category": forms.Select(attrs={"class": "form-select"}),
@@ -58,9 +58,9 @@ class MealForm(forms.ModelForm):
         return obj
 
 
-class MealVariantForm(forms.ModelForm):
+class ProductVariantForm(forms.ModelForm):
     class Meta:
-        model = MealVariant
+        model = ProductVariant
         fields = ["code", "label", "price", "stock", "is_active"]
         widgets = {
             "code": forms.Select(attrs={"class": "form-select"}),
@@ -71,10 +71,10 @@ class MealVariantForm(forms.ModelForm):
         }
 
 
-MealVariantFormSet = inlineformset_factory(
-    parent_model=Meal,
-    model=MealVariant,
-    form=MealVariantForm,
+ProductVariantFormSet = inlineformset_factory(
+    parent_model=Product,
+    model=ProductVariant,
+    form=ProductVariantForm,
 
     extra=1,           # UNE seule variante vide par défaut
     can_delete=True,    # possibilité de supprimer
@@ -143,13 +143,13 @@ class OffSiteSaleForm(forms.ModelForm):
         }
 
 
-class OffSiteSaleMealForm(forms.ModelForm):
+class OffSiteSaleproductForm(forms.ModelForm):
     """Formulaire pour ajouter un plat à une vente hors site"""
     class Meta:
-        model = OffSiteSaleMeal
-        fields = ["meal", "quantity", "price"]
+        model = OffSiteSaleproduct
+        fields = ["product", "quantity", "price"]
         widgets = {
-            "meal": forms.Select(attrs={"class": "form-select"}),
+            "product": forms.Select(attrs={"class": "form-select"}),
             "quantity": forms.NumberInput(attrs={
                 "class": "form-control",
                 "min": "1",
@@ -186,10 +186,10 @@ class OffSiteSaleSupplementForm(forms.ModelForm):
 
 
 # FormSets pour gérer les plats et suppléments d'une vente hors site
-OffSiteSaleMealFormSet = inlineformset_factory(
+OffSiteSaleproductFormSet = inlineformset_factory(
     parent_model=OffSiteSale,
-    model=OffSiteSaleMeal,
-    form=OffSiteSaleMealForm,
+    model=OffSiteSaleproduct,
+    form=OffSiteSaleproductForm,
     extra=1,
     can_delete=True,
     min_num=0,
@@ -253,3 +253,4 @@ class DebtForm(forms.ModelForm):
             debt.save()
             self.save_m2m()
         return debt
+ 

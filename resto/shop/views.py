@@ -6,22 +6,22 @@ from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
 from itertools import groupby
 
-from .models import Meal, Category
+from .models import Product, Category
 from .utils import (
     WEEKDAYS,
     resolve_order_phase,
     service_date,
     OPEN_TIME,
     CUTOFF_TIME,
-    sync_meal_availability,
+    sync_product_availability,
 )
-from .utils import ensure_meal_variants
+from .utils import ensure_product_variants
 from .ui import ORDER_PHASE_UI
 
 
 
 def weekly_menu(request):
-    sync_meal_availability()
+    sync_product_availability()
 
     today = service_date(timezone.localtime())
 
@@ -32,20 +32,20 @@ def weekly_menu(request):
         day = today + timedelta(days=offset)
         weekday = day.weekday()
 
-        meals = Meal.objects.filter(
+        products = Product.objects.filter(
             is_active=True,
         ).order_by("-id")
 
-        meals_for_day = [
-            meal for meal in meals
-            if weekday in (meal.available_weekdays or [])
+        products_for_day = [
+            product for product in products
+            if weekday in (product.available_weekdays or [])
         ]
 
-        if meals_for_day:
+        if products_for_day:
             week_menu[weekday] = {
                 "label": dict(WEEKDAYS)[weekday],
                 "date": day,
-                "meals": meals_for_day,
+                "products": products_for_day,
             }
 
     context = {
@@ -68,9 +68,9 @@ def _group_supplements_by_type(supplements):
     return grouped
 
 
-def meal_list(request, category_slug=None):
+def product_list(request, category_slug=None):
 
-    sync_meal_availability()
+    sync_product_availability()
 
     now = timezone.localtime()
     service_day = service_date(now)
@@ -78,38 +78,38 @@ def meal_list(request, category_slug=None):
 
     categories = Category.objects.all()
 
-    qs = Meal.objects.filter(is_active=True)
+    qs = Product.objects.filter(is_active=True)
     if category_slug:
         qs = qs.filter(category__slug=category_slug)
 
-    # Plats disponibles aujourd’hui
-    meals_today = [
-        meal for meal in qs.order_by("-id")
-        if service_weekday in (meal.available_weekdays or [])
+    # Produits disponibles aujourd’hui
+    products_today = [
+        product for product in qs.order_by("-id")
+        if service_weekday in (product.available_weekdays or [])
     ]
 
     # ─────────────────────────────
     # CAS 1 : UN SEUL PLAT → MODE "PLAT DU JOUR"
     # ─────────────────────────────
-    if len(meals_today) == 1:
-        meal = meals_today[0]
+    if len(products_today) == 1:
+        product = products_today[0]
 
         # Création automatique des variantes
-        if not meal.variants.exists():
-            ensure_meal_variants(meal)
+        if not product.variants.exists():
+            ensure_product_variants(product)
 
-        variants = list(meal.variants.filter(is_active=True).order_by("price"))
-        supplements = meal.supplements.filter(is_active=True).order_by("type", "name")
+        variants = list(product.variants.filter(is_active=True).order_by("price"))
+        supplements = product.supplements.filter(is_active=True).order_by("type", "name")
         supplements_by_type = _group_supplements_by_type(supplements)
 
         phase = resolve_order_phase(
             now_time=now.time(),
-            meal=meal,
+            meal=product,
             variants=variants,
         )
 
         context = {
-            "meal": meal,
+            "meal": product,
             "variants": variants,
             "supplements": supplements,
             "supplements_by_type": supplements_by_type,
@@ -127,7 +127,7 @@ def meal_list(request, category_slug=None):
     # CAS 2 : PLUSIEURS PLATS → MODE "MENU"
     # ─────────────────────────────
     context = {
-        "meals": meals_today,
+        "meals": products_today,
         "categories": categories,
         "category": category_slug,
     }
@@ -141,26 +141,26 @@ def meal_list(request, category_slug=None):
 
 
 
-def meal_detail(request, slug):
-    meal = get_object_or_404(Meal, slug=slug, is_active=True)
+def product_detail(request, slug):
+    product = get_object_or_404(Product, slug=slug, is_active=True)
 
     # Variantes automatiques si inexistantes
-    if not meal.variants.exists():
-        ensure_meal_variants(meal)
+    if not product.variants.exists():
+        ensure_product_variants(product)
 
 
-    variants = meal.variants.filter(is_active=True).order_by("price")
-    supplements = meal.supplements.filter(is_active=True).order_by("type", "name")
+    variants = product.variants.filter(is_active=True).order_by("price")
+    supplements = product.supplements.filter(is_active=True).order_by("type", "name")
     supplements_by_type = _group_supplements_by_type(supplements)
 
     phase = resolve_order_phase(
         now_time=timezone.localtime().time(),
-        meal=meal,
+        product=product,
         variants=variants,
     )
 
     context = {
-        "meal": meal,
+        "product": product,
         "variants": variants,
         "supplements": supplements,
         "supplements_by_type": supplements_by_type,

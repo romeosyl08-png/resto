@@ -1,6 +1,6 @@
 from decimal import Decimal, ROUND_HALF_UP
 from django.utils import timezone
-from shop.models import Meal, MealVariant, Supplement
+from shop.models import Product, ProductVariant, Supplement
 from marketing.services import PromoService
 
 CART_SESSION_ID = "cart"
@@ -15,8 +15,8 @@ class Cart:
         self.cart = self.session.get(CART_SESSION_ID, {})
         self.session[CART_SESSION_ID] = self.cart
 
-    def _key(self, meal_id: int, variant_code: str) -> str:
-        return f"{meal_id}:{variant_code}"
+    def _key(self, product_id: int, variant_code: str) -> str:
+        return f"{product_id}:{variant_code}"
 
     # ---------- CORE ----------
 
@@ -41,19 +41,19 @@ class Cart:
 
     # ---------- ADD / SET ----------
 
-    def add(self, meal_id, variant_code="standard", quantity=1, supplements=None):
-        meal_id = int(meal_id)
+    def add(self, product_id, variant_code="standard", quantity=1, supplements=None):
+        product_id = int(product_id)
         variant_code = (variant_code or "standard").strip()
         quantity = max(1, int(quantity))
 
-        key = self._key(meal_id, variant_code)
+        key = self._key(product_id, variant_code)
 
         if key not in self.cart:
-            variant = MealVariant.objects.get(
-                meal_id=meal_id, code=variant_code, is_active=True
+            variant = ProductVariant.objects.get(
+                product_id=product_id, code=variant_code, is_active=True
             )
             self.cart[key] = {
-                "meal_id": meal_id,
+                "product_id": product_id,
                 "variant_code": variant_code,
                 "quantity": 0,
                 "unit_price": str(variant.price),
@@ -65,32 +65,32 @@ class Cart:
         self._recompute_item(self.cart[key])
         self.save()
 
-    def set(self, meal_id, variant_code="standard", quantity=1):
-        meal_id = int(meal_id)
+    def set(self, product_id, variant_code="standard", quantity=1):
+        product_id = int(product_id)
         variant_code = (variant_code or "standard").strip()
         quantity = int(quantity)
 
-        key = self._key(meal_id, variant_code)
+        key = self._key(product_id, variant_code)
 
         if quantity <= 0:
             self.cart.pop(key, None)
             self.save()
             return
 
-        variant = MealVariant.objects.get(
-            meal_id=meal_id, code=variant_code, is_active=True
+        variant = ProductVariant.objects.get(
+            product_id=product_id, code=variant_code, is_active=True
         )
-        meal = Meal.objects.get(id=meal_id)
+        product = Product.objects.get(id=product_id)
 
         limit = min(
             self.MAX_QTY,
-            int(meal.max_per_order or self.MAX_QTY),
+            int(product.max_per_order or self.MAX_QTY),
             int(variant.stock),
         )
 
         if key not in self.cart:
             self.cart[key] = {
-                "meal_id": meal_id,
+                "product_id": product_id,
                 "variant_code": variant_code,
                 "quantity": 0,
                 "unit_price": str(variant.price),
@@ -103,8 +103,8 @@ class Cart:
         self._recompute_item(self.cart[key])
         self.save()
 
-    def set_supplements(self, meal_id, variant_code, supplements: dict):
-        key = self._key(int(meal_id), (variant_code or "standard").strip())
+    def set_supplements(self, product_id, variant_code, supplements: dict):
+        key = self._key(int(product_id), (variant_code or "standard").strip())
         if key not in self.cart:
             return
 
@@ -130,8 +130,8 @@ class Cart:
 
     # ---------- REMOVE ----------
 
-    def remove(self, meal_id, variant_code="standard"):
-        key = self._key(int(meal_id), (variant_code or "standard").strip())
+    def remove(self, product_id, variant_code="standard"):
+        key = self._key(int(product_id), (variant_code or "standard").strip())
         self.cart.pop(key, None)
         self.save()
 
@@ -143,17 +143,17 @@ class Cart:
     # ---------- ITER ----------
 
     def __iter__(self):
-        meal_ids = [i["meal_id"] for i in self.cart.values()]
-        meals = {m.id: m for m in Meal.objects.filter(id__in=meal_ids)}
+        product_ids = [i["product_id"] for i in self.cart.values()]
+        products = {m.id: m for m in Product.objects.filter(id__in=product_ids)}
 
         for item in self.cart.values():
-            meal = meals.get(item["meal_id"])
-            if not meal:
+            product = products.get(item["product_id"])
+            if not product:
                 continue
 
             yield {
-                "meal": meal,
-                "meal_id": item["meal_id"],
+                "product": product,
+                "product_id": item["product_id"],
                 "variant_code": item["variant_code"],
                 "quantity": int(item["quantity"]),
                 "unit_price": Decimal(item["unit_price"]),

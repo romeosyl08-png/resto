@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.contrib.auth import get_user_model
-from shop.models import Meal, Supplement
+from shop.models import Product, Supplement
 
 User = get_user_model()
 
@@ -77,16 +77,16 @@ class OffSiteSale(models.Model):
         return f"{self.description} - {self.amount}€ ({self.date})"
 
 
-class OffSiteSaleMeal(models.Model):
+class OffSiteSaleproduct(models.Model):
     """
     Modèle intermédiaire pour associer des plats à une vente hors site avec quantité
     """
     off_site_sale = models.ForeignKey(
         OffSiteSale, 
         on_delete=models.CASCADE, 
-        related_name="meal_items"
+        related_name="product_items"
     )
-    meal = models.ForeignKey(Meal, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(
         max_digits=10, 
@@ -95,12 +95,12 @@ class OffSiteSaleMeal(models.Model):
     )
 
     class Meta:
-        unique_together = ("off_site_sale", "meal")
+        unique_together = ("off_site_sale", "product")
         verbose_name = "Plat de vente hors site"
         verbose_name_plural = "Plats de vente hors site"
 
     def __str__(self):
-        return f"{self.meal.name} x{self.quantity}"
+        return f"{self.product.name} x{self.quantity}"
 
     @property
     def subtotal(self):

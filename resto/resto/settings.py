@@ -199,8 +199,8 @@ CART_SESSION_ID = "cart"
 from django.urls import reverse_lazy
 
 LOGIN_URL = reverse_lazy("comptes:login")
-LOGIN_REDIRECT_URL = reverse_lazy("shop:meal_list")
-LOGOUT_REDIRECT_URL = reverse_lazy("shop:meal_list")
+LOGIN_REDIRECT_URL = reverse_lazy("shop:product_list")
+LOGOUT_REDIRECT_URL = reverse_lazy("shop:product_list")
 
 # -------------------------------------------------------------------
 # WEB PUSH NOTIFICATIONS

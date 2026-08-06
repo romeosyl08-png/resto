@@ -548,51 +548,51 @@ select:focus {
   gap: 1rem;
 }
 
-.meal-card {
+.product-card {
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-.meal-card-media {
+.product-card-media {
   display: block;
   overflow: hidden;
 }
 
-.meal-img,
-.meal-main-image {
+.product-img,
+.product-main-image {
   display: block;
   width: 100%;
   object-fit: cover;
 }
 
-.meal-img {
+.product-img {
   aspect-ratio: 4 / 3;
   transition: transform 300ms ease;
 }
 
-.meal-card:hover .meal-img {
+.product-card:hover .product-img {
   transform: scale(1.04);
 }
 
-.meal-main-image {
+.product-main-image {
   height: 100%;
   min-height: 320px;
   transition: opacity 180ms ease;
 }
 
-.meal-card-head {
+.product-card-head {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 0.8rem;
 }
 
-.meal-card-link {
+.product-card-link {
   color: #fff;
 }
 
-.meal-card-link:hover {
+.product-card-link:hover {
   color: #fff;
 }
 
@@ -611,16 +611,16 @@ select:focus {
   color: #eafff4;
 }
 
-.meal-detail-shell .card {
+.product-detail-shell .card {
   height: 100%;
 }
 
-.meal-visual-card {
+.product-visual-card {
   position: relative;
   min-height: 320px;
 }
 
-.meal-visual-overlay {
+.product-visual-overlay {
   position: absolute;
   top: 1rem;
   left: 1rem;
@@ -643,7 +643,7 @@ select:focus {
   font-size: 0.92rem;
 }
 
-.meal-description {
+.product-description {
   color: var(--text-soft);
 }
 
@@ -783,18 +783,18 @@ select:focus {
   background: rgba(255, 255, 255, 0.16);
 }
 
-.meal-details {
+.product-details {
   border-top: 1px dashed rgba(255, 255, 255, 0.2);
   padding-top: 0.9rem;
 }
 
-.meal-details summary {
+.product-details summary {
   cursor: pointer;
   font-weight: 700;
   color: #fff;
 }
 
-.meal-details li {
+.product-details li {
   margin-bottom: 0.35rem;
 }
 
@@ -838,16 +838,16 @@ select:focus {
   border: 1px solid rgba(247, 107, 28, 0.45);
 }
 
-.week-meal-list {
+.week-product-list {
   display: grid;
   gap: 0.6rem;
 }
 
-.week-meal-item {
+.week-product-item {
   margin: 0;
 }
 
-.week-meal-link {
+.week-product-link {
   display: flex;
   flex-direction: column;
   gap: 0.18rem;
@@ -858,18 +858,18 @@ select:focus {
   transition: border-color 160ms ease, background 160ms ease;
 }
 
-.week-meal-link:hover {
+.week-product-link:hover {
   border-color: rgba(247, 107, 28, 0.45);
   background: rgba(247, 107, 28, 0.12);
   color: #fff;
 }
 
-.week-meal-title {
+.week-product-title {
   font-weight: 800;
   color: #fff;
 }
 
-.week-meal-meta {
+.week-product-meta {
   font-size: 0.85rem;
   color: var(--text-muted);
 }

@@ -138,8 +138,8 @@ class LoyaltyService:
         )
 
         if delivered_count in (3, 6):
-            sponsor.free_meals += 1
-            sponsor.save(update_fields=["free_meals"])
+            sponsor.free_products += 1
+            sponsor.save(update_fields=["free_products"])
 
         order.counted_for_referral = True
         order.save(update_fields=["counted_for_referral"])
@@ -155,14 +155,14 @@ class LoyaltyService:
         acc.recompute()
 
         # rollback parrainage (recalcul du nombre de repas gratuits)
-        LoyaltyService._recompute_free_meals_for_sponsor(order)
+        LoyaltyService._recompute_free_products_for_sponsor(order)
 
         if reset_referral_flag and order.counted_for_referral:
             order.counted_for_referral = False
             order.save(update_fields=["counted_for_referral"])
 
     @staticmethod
-    def _recompute_free_meals_for_sponsor(order: Order) -> None:
+    def _recompute_free_products_for_sponsor(order: Order) -> None:
         try:
             profile = order.user.userprofile
         except UserProfile.DoesNotExist:
@@ -188,9 +188,9 @@ class LoyaltyService:
         elif delivered_count >= 3:
             target = 1
 
-        if sponsor.free_meals != target:
-            sponsor.free_meals = target
-            sponsor.save(update_fields=["free_meals"])
+        if sponsor.free_products != target:
+            sponsor.free_products = target
+            sponsor.save(update_fields=["free_products"])
 
     @staticmethod
     @transaction.atomic

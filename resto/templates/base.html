@@ -55,7 +55,7 @@
   {% with current=request.resolver_match.url_name %}
   <nav class="navbar navbar-expand-lg navbar-food" role="navigation" aria-label="Navigation principale">
     <div class="container nav-wrap">
-      <a class="navbar-brand" href="{% url 'shop:meal_list' %}" aria-label="Retour à l'accueil">
+      <a class="navbar-brand" href="{% url 'shop:product_list' %}" aria-label="Retour à l'accueil">
         <span class="brand-mark">CMJ</span>
         <span class="brand-text">Chez Mama Jackie</span>
       </a>
@@ -67,7 +67,7 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav nav-main me-auto">
           <li class="nav-item">
-            <a class="nav-link {% if current == 'meal_list' or current == 'meal_list_by_category' or current == 'meal_detail' %}is-active{% endif %}" href="{% url 'shop:meal_list' %}" aria-label="Voir le menu">
+            <a class="nav-link {% if current == 'product_list' or current == 'product_list_by_category' or current == 'product_detail' %}is-active{% endif %}" href="{% url 'shop:product_list' %}" aria-label="Voir le menu">
               Menu
             </a>
           </li>
@@ -136,7 +136,7 @@
   </main>
 
   <nav class="bottom-nav" role="navigation" aria-label="Navigation mobile">
-    <a class="bn-item {% if current == 'meal_list' or current == 'meal_list_by_category' or current == 'meal_detail' %}is-active{% endif %}" href="{% url 'shop:meal_list' %}" aria-label="Menu">
+    <a class="bn-item {% if current == 'product_list' or current == 'product_list_by_category' or current == 'product_detail' %}is-active{% endif %}" href="{% url 'shop:product_list' %}" aria-label="Menu">
       <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
       </svg>

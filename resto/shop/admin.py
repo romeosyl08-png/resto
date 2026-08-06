@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Meal, MealVariant, Supplement
+from .models import Category, Product, ProductVariant, Supplement
 from django.utils.html import format_html
 
 
@@ -9,11 +9,8 @@ class CategoryAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
-
-
-
-class MealVariantInline(admin.TabularInline):
-    model = MealVariant
+class ProductVariantInline(admin.TabularInline):
+    model = ProductVariant
     extra = 0
     fields = ('code', 'label', 'price', 'stock', 'is_active', 'image', 'image_preview')
     readonly_fields = ('image_preview',)
@@ -28,10 +25,10 @@ class MealVariantInline(admin.TabularInline):
 
     image_preview.short_description = "Aperçu"
 
-@admin.register(Meal)
-class MealAdmin(admin.ModelAdmin):
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
-    inlines = [MealVariantInline]
+    inlines = [ProductVariantInline]
     list_display = ("name", "category", "is_active", "stock")
     list_filter = ("is_active", "category")
     search_fields = ("name",)
@@ -70,11 +67,11 @@ class SupplementAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Category)
-@admin.register(MealVariant)
-class MealVariantAdmin(admin.ModelAdmin):
-    list_display = ('meal', 'code', 'label', 'price', 'stock', 'is_active', 'image_preview')
-    list_filter = ('is_active', 'meal')
-    search_fields = ('meal__name', 'label')
+@admin.register(ProductVariant)
+class ProductVariantAdmin(admin.ModelAdmin):
+    list_display = ('product', 'code', 'label', 'price', 'stock', 'is_active', 'image_preview')
+    list_filter = ('is_active', 'product')
+    search_fields = ('product__name', 'label')
     readonly_fields = ('image_preview',)
 
     def image_preview(self, obj):

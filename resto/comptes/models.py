@@ -37,7 +37,7 @@ class UserProfile(models.Model):
         related_name="referrals"
     )
 
-    free_meals = models.PositiveIntegerField(default=0)
+    free_products = models.PositiveIntegerField(default=0)
 
     def save(self, *args, **kwargs):
         if not self.referral_code:

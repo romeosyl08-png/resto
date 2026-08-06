@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from orders.models import Order, Address
-from orders.utils import meals_by_price
+from orders.utils import products_by_price
 from comptes.utils import generate_referral_code
 from .forms import ProfileForm, AddressForm
 from django.contrib.auth.decorators import login_required
@@ -98,7 +98,7 @@ def profile(request):
         .filter(user=request.user)
         .select_related('user')
         .prefetch_related(
-            'items__meal',
+            'items__product',
             'items__supplements__supplement'
         )
         .order_by("-created_at")
@@ -137,7 +137,7 @@ def profile(request):
 
     ref_code = profile_obj.referral_code or ""
 
-    stats = meals_by_price(request.user)
+    stats = products_by_price(request.user)
 
     orders_list = list(orders_qs)
     orders_view = []

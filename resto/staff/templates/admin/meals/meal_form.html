@@ -1,7 +1,7 @@
 {% extends "admin/base_admin.html" %}
 
 {% block title %}
-  {% if mode == "create" %}Ajouter un plat{% else %}Modifier {{ meal.name }}{% endif %}
+  {% if mode == "create" %}Ajouter un plat{% else %}Modifier {{ product.name }}{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -9,10 +9,10 @@
   <div class="card-body p-4">
 
     <h1 class="h5 mb-3">
-      {% if mode == "create" %}Ajouter un plat{% else %}Modifier {{ meal.name }}{% endif %}
+      {% if mode == "create" %}Ajouter un plat{% else %}Modifier {{ product.name }}{% endif %}
     </h1>
 
-    <form method="post" enctype="multipart/form-data" id="meal-form">
+    <form method="post" enctype="multipart/form-data" id="product-form">
       {% csrf_token %}
 
       <h2 class="h6 mt-3">Infos du plat</h2>
@@ -113,7 +113,7 @@
 
       <div class="d-flex gap-2 mt-3">
         <button class="btn btn-primary" type="submit">Enregistrer</button>
-        <a class="btn btn-outline-secondary" href="{% url 'staff:meal_list' %}">Annuler</a>
+        <a class="btn btn-outline-secondary" href="{% url 'staff:product_list' %}">Annuler</a>
       </div>
     </form>
   </div>
@@ -125,7 +125,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const slugInput = document.getElementById("id_slug");
   const addButton = document.getElementById("add-variant");
   const container = document.getElementById("variants-container");
-  const totalForms = document.getElementById("id_mealvariant_set-TOTAL_FORMS");
+  const totalForms = document.getElementById("id_productvariant_set-TOTAL_FORMS");
   const template = document.getElementById("empty-variant-template");
 
   function slugify(value) {

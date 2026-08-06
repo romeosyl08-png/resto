@@ -15,11 +15,11 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from orders.models import Order, OrderItem
-from orders.utils import meals_by_price
+from orders.utils import products_by_price
 from comptes.models import UserProfile
 from .utils import manager_required
-from shop.models import Meal, MealVariant
-from .forms import MealForm, MealVariantFormSet, ExpenseForm, OffSiteSaleForm, DebtForm
+from shop.models import Product, ProductVariant
+from .forms import ProductForm, ProductVariantFormSet, ExpenseForm, OffSiteSaleForm, DebtForm
 from .models import Expense, OffSiteSale, Debt
 
 from marketing.models import LoyaltyAccount
@@ -111,11 +111,11 @@ def admin_dashboard(request):
     total_sales = orders_qs.aggregate(total=Sum("total"))["total"] or 0
     pending_count = orders_qs.filter(status="pending").count()
 
-    top_meals = (
+    top_products = (
         OrderItem.objects
         .filter(order__created_at__date=today)
-        .select_related("meal")
-        .values("meal__name")
+        .select_related("product")
+        .values("product__name")
         .annotate(
             quantity_sold=Sum("quantity"),
             revenue=Sum(F("quantity") * F("unit_price")),
@@ -125,19 +125,19 @@ def admin_dashboard(request):
 
     active_variants = Prefetch(
         "variants",
-        queryset=MealVariant.objects.filter(is_active=True).only("meal_id", "price").order_by("price"),
+        queryset=ProductVariant.objects.filter(is_active=True).only("product_id", "price").order_by("price"),
     )
-    meals = (
-        Meal.objects
+    products = (
+        Product.objects
         .select_related("category")
         .prefetch_related(active_variants)
         .order_by("category__name", "name")
     )
 
-    for meal in meals:
-        prices = [v.price for v in meal.variants.all()]
-        meal.price_min = min(prices) if prices else None
-        meal.price_max = max(prices) if prices else None
+    for product in products:
+        prices = [v.price for v in product.variants.all()]
+        product.price_min = min(prices) if prices else None
+        product.price_max = max(prices) if prices else None
 
     context = {
         "today": today,
@@ -145,8 +145,8 @@ def admin_dashboard(request):
         "orders_count_today": orders_count,
         "total_sales_today": total_sales,
         "pending_orders_count": pending_count,
-        "top_meals": top_meals,
-        "meals": meals,
+        "top_products": top_products,
+        "products": products,
     }
     return render(request, "admin/dashboard.html", context)
 
@@ -168,7 +168,7 @@ def admin_orders_list(request):
         Order.objects
         .select_related("user")
         .prefetch_related(
-            "items__meal__category",
+            "items__product__category",
             "items__supplements__supplement"
         )
         .order_by("-created_at")
@@ -246,7 +246,7 @@ def admin_order_detail(request, order_id: int):
         Order.objects
         .select_related("user")
         .prefetch_related(
-            "items__meal__category",
+            "items__product__category",
             "items__supplements__supplement"
         ),
         id=order_id
@@ -352,7 +352,7 @@ def admin_user_detail(request, user_id: int):
     p15_pct = pct(min(points, 15), 15)
 
 
-    stats = meals_by_price(u)
+    stats = products_by_price(u)
 
     
 
@@ -382,48 +382,48 @@ def admin_user_detail(request, user_id: int):
     })
 
 
-# -------- MEALS CRUD --------
+# -------- productS CRUD --------
 
 @manager_required
-def meal_list(request):
+def product_list(request):
     q = request.GET.get("q", "").strip()
     active_variants = Prefetch(
         "variants",
-        queryset=MealVariant.objects.filter(is_active=True).only("meal_id", "price").order_by("price"),
+        queryset=ProductVariant.objects.filter(is_active=True).only("product_id", "price").order_by("price"),
     )
     qs = (
-        Meal.objects
+        Product.objects
         .select_related("category")
         .prefetch_related(active_variants)
         .order_by("category__name", "name")
     )
     if q:
         qs = qs.filter(name__icontains=q)
-    meals = list(qs)
-    for meal in meals:
-        prices = [variant.price for variant in meal.variants.all()]
-        meal.price_min = min(prices) if prices else None
-        meal.price_max = max(prices) if prices else None
-    return render(request, "admin/meals/meal_list.html", {"meals": meals, "q": q})
+    products = list(qs)
+    for product in products:
+        prices = [variant.price for variant in product.variants.all()]
+        product.price_min = min(prices) if prices else None
+        product.price_max = max(prices) if prices else None
+    return render(request, "admin/products/product_list.html", {"products": products, "q": q})
 
 
 @manager_required
-def meal_create(request):
+def product_create(request):
     if request.method == "POST":
-        form = MealForm(request.POST, request.FILES)
-        variant_formset = MealVariantFormSet(request.POST)
+        form = ProductForm(request.POST, request.FILES)
+        variant_formset = ProductVariantFormSet(request.POST)
         if form.is_valid() and variant_formset.is_valid():
             with transaction.atomic():
-                meal = form.save()
-                variant_formset.instance = meal
+                product = form.save()
+                variant_formset.instance = product
                 variant_formset.save()
                 messages.success(request, "Plat créé.")
-                return redirect("staff:meal_list")
+                return redirect("staff:product_list")
     else:
-        form = MealForm()
-        variant_formset = MealVariantFormSet(queryset=MealVariant.objects.none())
+        form = ProductForm()
+        variant_formset = ProductVariantFormSet(queryset=ProductVariant.objects.none())
 
-    return render(request, "admin/meals/meal_form.html", {
+    return render(request, "admin/products/product_form.html", {
         "form": form,
         "variant_formset": variant_formset,
         "mode": "create",
@@ -431,40 +431,40 @@ def meal_create(request):
 
 
 @manager_required
-def meal_update(request, meal_id: int):
-    meal = get_object_or_404(Meal, id=meal_id)
+def product_update(request, product_id: int):
+    product = get_object_or_404(product, id=product_id)
 
     if request.method == "POST":
-        form = MealForm(request.POST, request.FILES, instance=meal)
-        variant_formset = MealVariantFormSet(request.POST, instance=meal)
+        form = ProductForm(request.POST, request.FILES, instance=product)
+        variant_formset = ProductVariantFormSet(request.POST, instance=product)
 
         if form.is_valid() and variant_formset.is_valid():
             with transaction.atomic():
-                meal = form.save()
+                product = form.save()
                 variant_formset.save()
                 messages.success(request, "Plat modifié.")
-                return redirect("staff:meal_list")
+                return redirect("staff:product_list")
     else:
-        form = MealForm(instance=meal)
-        variant_formset = MealVariantFormSet(instance=meal)
+        form = ProductForm(instance=product)
+        variant_formset = ProductVariantFormSet(instance=product)
 
     context = {
         "form": form,
         "variant_formset": variant_formset,
-        "meal": meal,
+        "product": product,
         "mode": "edit",
     }
-    return render(request, "admin/meals/meal_form.html", context)
+    return render(request, "admin/products/product_form.html", context)
 
 
 @manager_required
-def meal_delete(request, meal_id: int):
-    meal = get_object_or_404(Meal, id=meal_id)
+def product_delete(request, product_id: int):
+    product = get_object_or_404(product, id=product_id)
     if request.method == "POST":
-        meal.delete()
+        product.delete()
         messages.success(request, "Plat supprimé.")
-        return redirect("staff:meal_list")
-    return render(request, "admin/meals/meal_confirm_delete.html", {"meal": meal})
+        return redirect("staff:product_list")
+    return render(request, "admin/products/product_confirm_delete.html", {"product": product})
 
 
 # -------- ORDER STATUS ACTIONS --------
@@ -567,7 +567,7 @@ def referral_dashboard(request):
         "sponsors_count": len(sponsors),
         "total_referrals": sum(s.total_referrals for s in sponsors),
         "delivered_referrals": sum(s.delivered_referrals for s in sponsors),
-        "free_meals": sum(s.free_meals for s in sponsors),
+        "free_products": sum(s.free_products for s in sponsors),
     }
 
     return render(request, "admin/referral_dashboard.html", {

@@ -1,24 +1,24 @@
 {% extends "base.html" %}
 
 {% block title %}
-{% if meal %}{{ meal.name }} - Chez Mama Jackie{% else %}Menu du jour - Chez Mama Jackie{% endif %}
+{% if product %}{{ product.name }} - Chez Mama Jackie{% else %}Menu du jour - Chez Mama Jackie{% endif %}
 {% endblock %}
 
 {% block content %}
 <section class="container py-4 py-lg-5">
-{% if meal %}
-  <article class="meal-detail-shell" itemscope itemtype="https://schema.org/MenuItem">
+{% if product %}
+  <article class="product-detail-shell" itemscope itemtype="https://schema.org/MenuItem">
     <div class="row g-4 align-items-stretch">
       <div class="col-lg-7">
-        <div class="card meal-visual-card h-100 border-0 shadow-lg overflow-hidden position-relative">
-          {% if meal.image %}
-            <img id="meal-main-image" src="{{ meal.image.url }}" class="meal-main-image" alt="{{ meal.name }}" itemprop="image" loading="lazy">
+        <div class="card product-visual-card h-100 border-0 shadow-lg overflow-hidden position-relative">
+          {% if product.image %}
+            <img id="product-main-image" src="{{ product.image.url }}" class="product-main-image" alt="{{ product.name }}" itemprop="image" loading="lazy">
           {% else %}
-            <img id="meal-main-image" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1400&q=80" class="meal-main-image" alt="{{ meal.name }}" loading="lazy">
+            <img id="product-main-image" src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1400&q=80" class="product-main-image" alt="{{ product.name }}" loading="lazy">
           {% endif %}
 
-          <div class="meal-visual-overlay">
-            <span class="chip chip-soft" itemprop="menuAddOn">{{ meal.category.name }}</span>
+          <div class="product-visual-overlay">
+            <span class="chip chip-soft" itemprop="menuAddOn">{{ product.category.name }}</span>
             {% if ui.badge %}
               <span class="badge {{ ui.badge_class }} fs-6">{{ ui.badge }}</span>
             {% endif %}
@@ -27,11 +27,11 @@
       </div>
 
       <div class="col-lg-5">
-        <div class="card meal-order-card border-0 shadow-lg h-100">
+        <div class="card product-order-card border-0 shadow-lg h-100">
           <div class="card-body p-4 p-xl-5 d-flex flex-column gap-3">
             <header>
               <p class="section-kicker mb-2">Plat du jour</p>
-              <h1 class="h2 mb-2" itemprop="name">{{ meal.name }}</h1>
+              <h1 class="h2 mb-2" itemprop="name">{{ product.name }}</h1>
 
               {% if ui.message %}
                 <div class="status-hint mt-3" role="status" aria-live="polite">
@@ -45,11 +45,11 @@
               </div>
             </header>
 
-            <p class="meal-description mb-0" itemprop="description">
-              {{ meal.description|default:"Un plat genereux prepare avec soin par Mama Jackie." }}
+            <p class="product-description mb-0" itemprop="description">
+              {{ product.description|default:"Un plat genereux prepare avec soin par Mama Jackie." }}
             </p>
 
-            <form method="post" action="{% url 'orders:cart_add' meal.id %}" class="meal-order-form mt-2" aria-label="Formulaire de commande">
+            <form method="post" action="{% url 'orders:cart_add' product.id %}" class="product-order-form mt-2" aria-label="Formulaire de commande">
               {% csrf_token %}
 
               <fieldset class="option-section">
@@ -60,7 +60,7 @@
                       <input type="radio"
                              name="variant"
                              value="{{ v.code }}"
-                             data-image-url="{% if v.image %}{{ v.image.url }}{% elif meal.image %}{{ meal.image.url }}{% else %}https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1400&q=80{% endif %}"
+                             data-image-url="{% if v.image %}{{ v.image.url }}{% elif product.image %}{{ product.image.url }}{% else %}https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1400&q=80{% endif %}"
                              {% if forloop.first %}checked{% endif %}
                              {% if v.stock <= 0 %}disabled{% endif %}
                              aria-label="{{ v.label }} - {{ v.price }} FCFA {% if v.stock <= 0 %}(Epuise){% endif %}">
@@ -165,13 +165,13 @@
               </fieldset>
               {% endif %}
 
-              <button type="submit" class="btn btn-dark btn-lg w-100 mt-4" {% if not ui.can_order %}disabled aria-disabled="true"{% endif %} aria-label="Ajouter {{ meal.name }} au panier">
+              <button type="submit" class="btn btn-dark btn-lg w-100 mt-4" {% if not ui.can_order %}disabled aria-disabled="true"{% endif %} aria-label="Ajouter {{ product.name }} au panier">
                 <i class="bi bi-cart3"></i>
                 {{ ui.button|default:"Ajouter au panier" }}
               </button>
             </form>
 
-            <details class="meal-details mt-2">
+            <details class="product-details mt-2">
               <summary>Informations complémentaires</summary>
               <ul class="list-unstyled small mt-3 mb-0">
                 {% with std=variants|first %}
@@ -179,7 +179,7 @@
                     <li><strong>Prix :</strong> a partir de {{ std.price }} FCFA</li>
                   {% endif %}
                 {% endwith %}
-                <li><strong>Categorie :</strong> {{ meal.category.name }}</li>
+                <li><strong>Categorie :</strong> {{ product.category.name }}</li>
                 <li><strong>Fermeture commandes :</strong> {{ cutoff_time|time:"H:i" }}</li>
                 <li>
                   <strong>Disponibilite :</strong>
@@ -197,7 +197,7 @@
     </div>
   </article>
 
-{% elif meals %}
+{% elif products %}
   <header class="section-head mb-4">
     <p class="section-kicker mb-2">Chez Mama Jackie</p>
     <h1 class="mb-2">Menu du jour</h1>
@@ -205,43 +205,43 @@
   </header>
 
   <nav class="menu-filters mb-4" aria-label="Filtrer par categorie">
-    <a class="chip-btn {% if not category %}is-active{% endif %}" href="{% url 'shop:meal_list' %}" {% if not category %}aria-current="page"{% endif %}>Tout</a>
+    <a class="chip-btn {% if not category %}is-active{% endif %}" href="{% url 'shop:product_list' %}" {% if not category %}aria-current="page"{% endif %}>Tout</a>
     {% for c in categories %}
-      <a class="chip-btn {% if category == c.slug %}is-active{% endif %}" href="{% url 'shop:meal_list_by_category' c.slug %}" {% if category == c.slug %}aria-current="page"{% endif %}>{{ c.name }}</a>
+      <a class="chip-btn {% if category == c.slug %}is-active{% endif %}" href="{% url 'shop:product_list_by_category' c.slug %}" {% if category == c.slug %}aria-current="page"{% endif %}>{{ c.name }}</a>
     {% endfor %}
   </nav>
 
   <div class="menu-grid" role="list">
-    {% for meal in meals %}
-      <article class="card meal-card border-0 shadow-sm" role="listitem" itemscope itemtype="https://schema.org/MenuItem">
-        <a href="{% url 'shop:meal_detail' meal.slug %}" class="meal-card-media" aria-label="Voir {{ meal.name }}">
-          {% if meal.image %}
-            <img src="{{ meal.image.url }}" class="meal-img" alt="{{ meal.name }}" itemprop="image" loading="lazy">
+    {% for product in products %}
+      <article class="card product-card border-0 shadow-sm" role="listitem" itemscope itemtype="https://schema.org/MenuItem">
+        <a href="{% url 'shop:product_detail' product.slug %}" class="product-card-media" aria-label="Voir {{ product.name }}">
+          {% if product.image %}
+            <img src="{{ product.image.url }}" class="product-img" alt="{{ product.name }}" itemprop="image" loading="lazy">
           {% else %}
-            <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80" class="meal-img" alt="{{ meal.name }}" loading="lazy">
+            <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80" class="product-img" alt="{{ product.name }}" loading="lazy">
           {% endif %}
         </a>
 
         <div class="card-body d-flex flex-column gap-3">
-          <header class="meal-card-head">
+          <header class="product-card-head">
             <h2 class="h5 mb-0">
-              <a class="meal-card-link stretched-link" href="{% url 'shop:meal_detail' meal.slug %}" itemprop="url">
-                <span itemprop="name">{{ meal.name }}</span>
+              <a class="product-card-link stretched-link" href="{% url 'shop:product_detail' product.slug %}" itemprop="url">
+                <span itemprop="name">{{ product.name }}</span>
               </a>
             </h2>
             <span class="price-pill" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
-              <span itemprop="price">{{ meal.price }}</span>
+              <span itemprop="price">{{ product.price }}</span>
               <span itemprop="priceCurrency" content="XOF">FCFA</span>
             </span>
           </header>
 
           <p class="text-muted small mb-0" itemprop="description">
-            {{ meal.description|default:"Un délicieux plat preparé avec soin."|truncatechars:120 }}
+            {{ product.description|default:"Un délicieux plat preparé avec soin."|truncatechars:120 }}
           </p>
 
           <div class="d-flex gap-2 mt-auto">
-            <a class="btn btn-outline-secondary flex-fill" href="{% url 'shop:meal_detail' meal.slug %}" aria-label="Voir les details de {{ meal.name }}">Details</a>
-            <a class="btn btn-primary flex-fill" href="{% url 'shop:meal_detail' meal.slug %}" aria-label="Commander {{ meal.name }}">Commander</a>
+            <a class="btn btn-outline-secondary flex-fill" href="{% url 'shop:product_detail' product.slug %}" aria-label="Voir les details de {{ product.name }}">Details</a>
+            <a class="btn btn-primary flex-fill" href="{% url 'shop:product_detail' product.slug %}" aria-label="Commander {{ product.name }}">Commander</a>
           </div>
         </div>
       </article>
@@ -251,7 +251,7 @@
           <i class="bi bi-calendar2-x empty-state-icon"></i>
           <h2 class="h4 mt-3 mb-2">Aucun plat disponible</h2>
           <p class="text-muted mb-4">Le menu du jour n'est pas encore prêt. Revenez dans quelques instants.</p>
-          <a href="{% url 'shop:meal_list' %}" class="btn btn-primary">Actualiser la page</a>
+          <a href="{% url 'shop:product_list' %}" class="btn btn-primary">Actualiser la page</a>
         </div>
       </article>
     {% endfor %}
@@ -263,7 +263,7 @@
       <i class="bi bi-hourglass-split empty-state-icon"></i>
       <h2 class="h4 mt-3 mb-2">Aucun plat disponible</h2>
       <p class="text-muted mb-4">Le menu du jour n'est pas encore prêt. Revenez dans quelques instants.</p>
-      <a href="{% url 'shop:meal_list' %}" class="btn btn-primary">Actualiser la page</a>
+      <a href="{% url 'shop:product_list' %}" class="btn btn-primary">Actualiser la page</a>
     </div>
   </article>
 {% endif %}
@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.variant-pill input[type="radio"][name="variant"]').forEach(function (radio) {
     radio.addEventListener('change', function () {
       const imageUrl = radio.dataset.imageUrl;
-      const mainImage = document.getElementById('meal-main-image');
+      const mainImage = document.getElementById('product-main-image');
       if (!mainImage || !imageUrl) return;
 
       mainImage.style.opacity = '0.45';

@@ -84,7 +84,7 @@
               - repas gratuit debloque
             {% endif %}
           </p>
-          <p class="small mb-0">Repas gratuits disponibles: <strong>{{ profile.free_meals }}</strong></p>
+          <p class="small mb-0">Repas gratuits disponibles: <strong>{{ profile.free_products }}</strong></p>
         </div>
       </article>
 
@@ -156,7 +156,7 @@
                       <td class="text-muted small">{{ o.created_at_display }}</td>
                       <td><span class="fw-semibold text-success">{{ o.total_display }} FCFA</span></td>
                       <td>
-                        {% if o.loyalty_reward == "free_meal" %}
+                        {% if o.loyalty_reward == "free_product" %}
                           <span class="badge bg-success-subtle text-success-emphasis border">Plat gratuit</span>
                         {% elif o.loyalty_reward == "discount_500" %}
                           <span class="badge bg-success-subtle text-success-emphasis border">Reduction 500</span>
